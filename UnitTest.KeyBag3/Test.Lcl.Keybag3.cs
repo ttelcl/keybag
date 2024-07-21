@@ -18,11 +18,11 @@ using Lcl.KeyBag3.Model.Contents.Blocks;
 
 namespace UnitTest.KeyBag3;
 
-public class UnitTest1
+public class LclKeybag3Tests
 {
   private readonly ITestOutputHelper _outputHelper;
 
-  public UnitTest1(ITestOutputHelper outputHelper)
+  public LclKeybag3Tests(ITestOutputHelper outputHelper)
   {
     _outputHelper=outputHelper;
   }
