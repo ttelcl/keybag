@@ -1,0 +1,167 @@
+﻿<mah:MetroWindow 
+    x:Class="Keybag3.Main.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:local="clr-namespace:Keybag3.Main"
+    xmlns:db="clr-namespace:Keybag3.Main.Database"
+    xmlns:content="clr-namespace:Keybag3.Main.KeybagContent"
+    xmlns:sync="clr-namespace:Keybag3.Main.Synchronization"
+    xmlns:util="clr-namespace:Keybag3.WpfUtilities"
+    mc:Ignorable="d"
+    Title="{Binding AppTitle}"
+    TitleCharacterCasing="Normal"
+    Height="600"
+    Width="800"
+    MinHeight="500"
+    MinWidth="700"
+    ResizeMode="CanResizeWithGrip"
+    Icon="pack://application:,,,/Keybag3;component/assets/three-keys-256.ico"
+    d:DataContext="{d:DesignInstance local:MainViewModel, IsDesignTimeCreatable=False}"
+    Loaded="MetroWindow_Loaded">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File" IsEnabled="{Binding NoOverlay}">
+                <MenuItem Header="_Exit" Command="{Binding ExitCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Padding="5,0,0,0" Height="20" Width="25" Kind="ExitToApp" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Theme">
+                <MenuItem>
+                    <MenuItem.Header>
+                        <mah:ColorPalette
+                Header="Theme Color"
+                ItemsSource="{Binding Services.ThemeHelper.Colors}"
+                ColorNamesDictionary="{Binding Services.ThemeHelper.ThemeColorNameMap}"
+                MaxWidth="150"
+                mah:ControlsHelper.ContentCharacterCasing="Normal"
+                SelectedItem="{Binding ThemePaletteItem, Mode=TwoWay}">
+                        </mah:ColorPalette>
+                    </MenuItem.Header>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Debug">
+                <MenuItem Header="_Crash!"
+                          Command="{Binding CrashTestCommand}"
+                          IsEnabled="{Binding NoOverlay}"/>
+                <MenuItem Header="_Bad View"
+                          Command="{Binding BadViewModelCommand}"
+                          IsEnabled="{Binding NoOverlay}"/>
+                <Separator/>
+                <MenuItem Header="_Reset View"
+                          Command="{Binding ResetViewCommand}"/>
+                <MenuItem Header="_Fake Empty Database"
+                          Command="{Binding DbViewModel.TestEmptyCommand}"/>
+            </MenuItem>
+        </Menu>
+        <StatusBar DockPanel.Dock="Bottom">
+            <!-- Reminder: The panel of a StatusBar is a DockPanel, so you can use DockPanel.Dock! -->
+            <StatusBarItem DockPanel.Dock="Right" Padding="1,0">
+                <!-- Space for grip -->
+                <TextBlock Text="" Width="15"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="1,0">
+                <Border BorderThickness="1" BorderBrush="{DynamicResource MahApps.Brushes.AccentBase}"
+                        Padding="2,1">
+                    <TextBlock Text="{Binding StatusMessage}"/>
+                </Border>
+            </StatusBarItem>
+        </StatusBar>
+        <Grid DockPanel.Dock="Top" Visibility="Collapsed">
+            <!-- Reminder on theme colors -->
+            <GroupBox Header="Reminder" Padding="0">
+                <WrapPanel>
+                    <TextBlock Padding="30,0" Background="{DynamicResource MahApps.Brushes.AccentBase}" Text="AccentBase"/>
+                    <TextBlock Padding="30,0" Background="{DynamicResource MahApps.Brushes.Accent}" Text="Accent"/>
+                    <TextBlock Padding="30,0" Background="{DynamicResource MahApps.Brushes.Accent2}" Text="Accent2"/>
+                    <TextBlock Padding="30,0" Background="{DynamicResource MahApps.Brushes.Accent3}" Text="Accent3"/>
+                    <TextBlock Padding="30,0" Background="{DynamicResource MahApps.Brushes.Accent4}" Text="Accent4"/>
+                    <TextBlock Padding="30,0" Background="{DynamicResource MahApps.Brushes.Highlight}" Text="Highlight"/>
+                </WrapPanel>
+            </GroupBox>
+        </Grid>
+        <Grid>
+            <!-- Primary content (non-overlay) -->
+            <Border
+                BorderThickness="1"
+                BorderBrush="{DynamicResource MahApps.Brushes.Accent2}">
+                <ContentControl
+                    x:Name="contentControlMain"
+                    Content="{Binding CurrentView}">
+                    <ContentControl.Resources>
+                        <DataTemplate DataType="{x:Type db:KeybagDbViewModel}">
+                            <db:KeybagDbView />
+                        </DataTemplate>
+                        <DataTemplate DataType="{x:Type db:NewKeybagViewModel}">
+                            <db:NewKeybagView />
+                        </DataTemplate>
+                        <DataTemplate DataType="{x:Type db:ImportConnectViewModel}">
+                            <db:ImportConnectView />
+                        </DataTemplate>
+                        <DataTemplate DataType="{x:Type db:KeybagSetViewModel}">
+                            <!-- Note: view and viewmodel in different namespaces! -->
+                            <content:KeybagSetView/>
+                        </DataTemplate>
+                        <DataTemplate DataType="{x:Type util:ViewModelBase}">
+                            <Border
+                                BorderBrush="#CC2200"
+                                BorderThickness="20">
+                                <Button Command="{
+                                            Binding ElementName=contentControlMain,
+                                            Path=DataContext.ResetViewCommand}">
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock FontSize="24" Text="Oops! Unknown ViewModel."/>
+                                        <TextBlock FontSize="16" Text="{Binding TypeName}"/>
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+                        </DataTemplate>
+                    </ContentControl.Resources>
+                </ContentControl>
+            </Border>
+            <!-- overlay slot -->
+            <Border
+                Visibility="{Binding OverlayVisibility}"
+                BorderThickness="30,24"
+                Background="#C666"
+                BorderBrush="#C666">
+                <ContentControl
+                        x:Name="contentControlOverlay"
+                        Content="{Binding Overlay}">
+                    <ContentControl.Resources>
+                        <DataTemplate DataType="{x:Type db:UnlockKeyOverlayViewModel}">
+                            <db:UnlockKeyOverlay/>
+                        </DataTemplate>
+                        <DataTemplate DataType="{x:Type content:EntryEditViewModel}">
+                            <content:EntryEditOverlay/>
+                        </DataTemplate>
+                        <DataTemplate DataType="{x:Type sync:SynchronizationViewModel}">
+                            <sync:SynchronizationOverlay/>
+                        </DataTemplate>
+                        <DataTemplate DataType="{x:Type util:ViewModelBase}">
+                            <Border
+                                BorderBrush="#993322"
+                                BorderThickness="20">
+                                <Button Command="{
+                                            Binding ElementName=contentControlOverlay,
+                                            Path=DataContext.CloseOverlayCommand}">
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock FontSize="24" 
+                                                       Text="Oops! Unknown Overlay ViewModel."/>
+                                        <TextBlock FontSize="16" 
+                                                       Text="{Binding TypeName}"/>
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+                        </DataTemplate>
+                    </ContentControl.Resources>
+                </ContentControl>
+            </Border>
+        </Grid>
+    </DockPanel>
+</mah:MetroWindow>

@@ -1,0 +1,157 @@
+﻿<UserControl
+    x:Class="Keybag3.Main.KeybagContent.EntryEditOverlay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:Keybag3.Main.KeybagContent"
+    xmlns:db="clr-namespace:Keybag3.Main.Database"
+    xmlns:blocks="clr-namespace:Keybag3.Main.KeybagContent.EntryBlocks"
+    xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:utils="clr-namespace:Keybag3.WpfUtilities"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    mc:Ignorable="d" 
+    d:DataContext="{d:DesignInstance local:EntryEditViewModel, IsDesignTimeCreatable=False}"
+    d:DesignHeight="450" d:DesignWidth="800"
+    KeyboardNavigation.TabNavigation="Cycle">
+    <!-- ref https://stackoverflow.com/a/8326969/271323 on that TabNavigation -->
+    <DockPanel Background="{DynamicResource MahApps.Brushes.Control.Background}">
+        <!-- Buttons Pane -->
+        <Border
+            Padding="5,3"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource MahApps.Brushes.Accent2}"
+            Background="{DynamicResource MahApps.Brushes.Accent4}"
+            DockPanel.Dock="Bottom">
+            <DockPanel>
+                <Button
+                    Padding="5,3" Margin="5,2" DockPanel.Dock="Right"
+                    Command="{Binding EditOrCreateCommand}"
+                    ToolTipService.ShowOnDisabled="True">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="TextBoxCheck" Padding="2,0" Height="24" Width="24" />
+                        <TextBlock FontSize="14" Padding="2,2" Text="Accept"/>
+                    </StackPanel>
+                </Button>
+                <Button
+                    Padding="5,3" Margin="5,2" DockPanel.Dock="Right"
+                    Command="{Binding CancelCommand}"
+                    >
+                    <!-- IsCancel="True" - for now: do not add that -->
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="Cancel" Padding="2,0" Height="24" Width="24" />
+                        <TextBlock FontSize="14" Padding="2,2" Text="Cancel"/>
+                    </StackPanel>
+                </Button>
+                <StackPanel>
+                    <!-- Empty space -->
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- main -->
+        <Border
+            Padding="5,3" BorderThickness="1"
+            BorderBrush="{DynamicResource MahApps.Brushes.Accent2}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Grid.Row="0" Grid.Column="0"
+                    Padding="5,5,10,5"
+                    Text="Label"/>
+                <TextBox
+                    Grid.Row="0" Grid.Column="1" Margin="0,5,0,5"
+                    FontSize="14"
+                    ToolTip="The label for this entry. Keep it short."
+                    mah:TextBoxHelper.Watermark="Entry Label"
+                    Text="{Binding Label, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    BorderBrush="{Binding LabelStatus, Converter={StaticResource Kb3Fore}}"
+                    utils:FocusUtil.AdvancesByEnterKey="True"
+                    Loaded="Label_TextBox_Loaded"/>
+                <StackPanel
+                    Grid.Row="1" Grid.Column="1" Margin="0,0,0,5"
+                    Orientation="Horizontal"
+                    Visibility="{Binding IsLabelInvalid, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    TextBlock.Foreground="{Binding LabelStatus, Converter={StaticResource Kb3Fore}}">
+                    <iconPacks:PackIconMaterial
+                        Kind="{Binding LabelStatusIcon}"
+                        Margin="5,4,5,0" Width="14" Height="14"/>
+                    <TextBlock
+                        FontSize="14"
+                        Text="{Binding LabelError}"/>
+                </StackPanel>
+                <!-- Tags -->
+                <TextBlock
+                    Grid.Row="2" Grid.Column="0"
+                    Padding="5,5,10,5"
+                    Text="Tags"/>
+                <!--  AcceptsReturn="True" -->
+                <TextBox
+                    Grid.Row="2" Grid.Column="1" Margin="0,5,0,5"
+                    mah:TextBoxHelper.Watermark="Space separated tags"
+                    TextWrapping="Wrap"
+                    ToolTip="The space separated tags for this entry (used as search terms)"
+                    Text="{Binding Tags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    BorderBrush="{Binding TagsStatus, Converter={StaticResource Kb3Fore}}"
+                    utils:FocusUtil.AdvancesByEnterKey="True"/>
+                <StackPanel
+                    Grid.Row="3" Grid.Column="1" Margin="0,0,0,5"
+                    Orientation="Horizontal"
+                    Visibility="{Binding AreTagsInvalid, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    TextBlock.Foreground="{Binding TagsStatus, Converter={StaticResource Kb3Fore}}">
+                    <iconPacks:PackIconMaterial
+                        Kind="{Binding TagsStatusIcon}"
+                        Margin="5,4,5,0" Width="14" Height="14"/>
+                    <TextBlock
+                        FontSize="14"
+                        Text="{Binding TagsError}"/>
+                </StackPanel>
+                <ScrollViewer
+                    Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                    ScrollViewer.VerticalScrollBarVisibility="Visible">
+                    <!-- Blocks -->
+                    <StackPanel Orientation="Vertical">
+                        <ItemsControl
+                            ItemsSource="{Binding Blocks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <blocks:BlockEditFrameView/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border
+                            BorderThickness="1" CornerRadius="8"
+                            Padding="10,3" Margin="0,10,0,0"
+                            BorderBrush="{DynamicResource MahApps.Brushes.Accent2}"
+                            Background="{DynamicResource MahApps.Brushes.Accent4}"
+                            >
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Add Block:"/>
+                                <Button
+                                    Command="{Binding AddPlaintextBlockCommand}"
+                                    Padding="10,0" Margin="20,0" FontSize="12">
+                                    Plain Text Block
+                                </Button>
+                                <Button
+                                    Padding="10,0" Margin="20,0" FontSize="12"
+                                    IsEnabled="False">
+                                    Record Block (Key-value List)
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </DockPanel>
+</UserControl>

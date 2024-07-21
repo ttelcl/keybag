@@ -1,0 +1,69 @@
+﻿<UserControl
+    x:Class="Keybag3.Main.KeybagContent.ScopeFilterView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:Keybag3.Main.KeybagContent"
+    xmlns:db="clr-namespace:Keybag3.Main.Database"
+    xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    mc:Ignorable="d" 
+    d:DataContext="{d:DesignInstance local:ScopeFilterViewModel, IsDesignTimeCreatable=False}"
+    d:DesignHeight="250" d:DesignWidth="400">
+    <GroupBox Padding="0">
+        <GroupBox.Header>
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left" FontStyle="Italic">
+                    Scope
+                </TextBlock>
+                <ToggleButton
+                    DockPanel.Dock="Right"
+                    IsChecked="{Binding Expanded}"
+                    Style="{DynamicResource MahApps.Styles.ToggleButton.Circle}"
+                    MinWidth="20" MinHeight="20" BorderThickness="0">
+                    <iconPacks:PackIconMaterial
+                        Kind="{Binding ExpanderIcon}" Height="18" Width="18" />
+                </ToggleButton>
+                <StackPanel/>
+            </DockPanel>
+        </GroupBox.Header>
+        <Grid Visibility="{Binding Expanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <GroupBox
+                Header="Sections" Margin="1"
+                Grid.Column="0">
+                <ScrollViewer VerticalScrollBarVisibility="Visible" MaxHeight="80">
+                    <ItemsControl ItemsSource="{Binding Model.Sections.Sections}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type local:SectionModel}">
+                                <CheckBox
+                                    Content="{Binding SectionName}"
+                                    IsChecked="{Binding IsActive}"
+                                    IsEnabled="{Binding IsEnabled}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </GroupBox>
+            <GroupBox
+                Header="State" Margin="1"
+                Grid.Column="1">
+                <StackPanel Orientation="Vertical">
+                    <CheckBox Content="Archived"
+                          IsChecked="{Binding ShowArchived}"
+                          IsThreeState="True"/>
+                    <CheckBox Content="Erased"
+                          IsChecked="{Binding ShowErased}"
+                          IsThreeState="True"/>
+                    <CheckBox Content="Sealed"
+                          IsChecked="{Binding ShowSealed}"
+                          IsThreeState="True"/>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+    </GroupBox>
+</UserControl>
