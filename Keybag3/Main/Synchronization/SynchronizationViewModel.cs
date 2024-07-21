@@ -4,18 +4,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Input;
+
+using Lcl.KeyBag3.Storage;
 
 using Keybag3.WpfUtilities;
 using Keybag3.Main.KeybagContent;
 using Keybag3.Main.Database;
-using System.Windows.Input;
-using System.Collections.ObjectModel;
-using Lcl.KeyBag3.Storage;
 
 namespace Keybag3.Main.Synchronization;
 
@@ -32,6 +33,9 @@ public class SynchronizationViewModel: ViewModelBase
       SyncTargets.Add(new SyncTargetViewModel(this, syncBag));
     }
     DoneCommand = new DelegateCommand(p => { PopMe(); });
+    StepCommand = new DelegateCommand(
+      p => { Step(); },
+      p => StepEnabled);
   }
 
   public static bool TryPushOverlay(
@@ -74,6 +78,8 @@ public class SynchronizationViewModel: ViewModelBase
 
   public ICommand DoneCommand { get; }
 
+  public ICommand StepCommand { get; }
+
   public KeybagViewModel Target { get; }
 
   public KeybagSetViewModel SetModel { get => Target.Owner; }
@@ -90,7 +96,120 @@ public class SynchronizationViewModel: ViewModelBase
 
   public int PrimaryExportTargetCount { get => SyncModel.PrimaryExportTargetCount; }
 
-  public void LoadAndDonateToPrimary()
+  public SynchronizationStage Stage {
+    get => _stage;
+    set {
+      if(SetValueProperty(ref _stage, value))
+      {
+        RaisePropertyChanged(nameof(NextStepText));
+        RaisePropertyChanged(nameof(StepEnabled));
+      }
+    }
+  }
+  private SynchronizationStage _stage = SynchronizationStage.NotStarted;
+
+  public string NextStepText {
+    get => Stage switch {
+      SynchronizationStage.NotStarted => "Start!",
+      SynchronizationStage.Loading => "(loading...)",
+      SynchronizationStage.Loaded => "Inhale",
+      SynchronizationStage.Inhaling => "(importing)",
+      SynchronizationStage.Inhaled => "Exhale",
+      SynchronizationStage.Exhaling => "(exporting)",
+      SynchronizationStage.Exhaled => "Save",
+      SynchronizationStage.Saving => "(saving...)",
+      SynchronizationStage.Done => "Completed",
+      SynchronizationStage.Error => "Aborted",
+      _ => throw new InvalidOperationException("Invalid stage"),
+    };
+  }
+
+  public bool StepEnabled {
+    get => Stage switch {
+      SynchronizationStage.NotStarted => true,
+      SynchronizationStage.Loaded => true,
+      SynchronizationStage.Inhaled => true,
+      SynchronizationStage.Exhaled => true,
+      SynchronizationStage.Done => false,
+      SynchronizationStage.Error => false,
+      _ => false,
+    };
+  }
+
+  public void Step()
+  {
+    try
+    {
+      Mouse.OverrideCursor = Cursors.Wait;
+      switch(Stage)
+      {
+        case SynchronizationStage.NotStarted:
+          Load();
+          break;
+        case SynchronizationStage.Loaded:
+          Inhale();
+          break;
+        case SynchronizationStage.Inhaled:
+          Exhale();
+          break;
+        case SynchronizationStage.Exhaled:
+          Save();
+          break;
+        case SynchronizationStage.Done:
+          break;
+        case SynchronizationStage.Error:
+          MessageBox.Show(
+            "Synchronization has been aborted.",
+            "Error",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+          break;
+        default:
+          throw new InvalidOperationException("Invalid stage");
+      }
+    }
+    catch(Exception)
+    {
+      Stage = SynchronizationStage.Error;
+      throw;
+    }
+    finally
+    {
+      Mouse.OverrideCursor = null;
+    }
+  }
+
+  private void StartStage(
+    SynchronizationStage expected,
+    SynchronizationStage newStage)
+  {
+    if(Stage != expected)
+    {
+      Stage = SynchronizationStage.Error;
+      throw new InvalidOperationException(
+        $"Expected stage {expected}, but was {Stage}");
+    }
+    Stage = newStage;
+  }
+
+  private void CompleteStage(
+    SynchronizationStage expected,
+    SynchronizationStage newStage)
+  {
+    if(Stage == SynchronizationStage.Error)
+    {
+      return;
+    }
+    if(Stage != expected)
+    {
+      Stage = SynchronizationStage.Error;
+      throw new InvalidOperationException(
+        $"Expected stage {expected}, but was {Stage}");
+    }
+    Stage = newStage;
+  }
+
+  private void Load()
   {
     var key = SetModel.FindKey();
     if(key == null)
@@ -100,11 +219,52 @@ public class SynchronizationViewModel: ViewModelBase
         "Internal error",
         MessageBoxButton.OK,
         MessageBoxImage.Error);
+      Stage = SynchronizationStage.Error;
       return;
     }
-    SyncModel.LoadAndDonateToPrimary(key);
+    StartStage(SynchronizationStage.NotStarted, SynchronizationStage.Loading);
+    foreach(var target in SyncTargets)
+    {
+      target.Target.TryLoad(key);
+      target.Refresh();
+    }
+    CompleteStage(SynchronizationStage.Loading, SynchronizationStage.Loaded);
+  }
+
+  private void Inhale()
+  {
+    StartStage(SynchronizationStage.Loaded, SynchronizationStage.Inhaling);
+    SyncModel.Inhale();
+    CompleteStage(SynchronizationStage.Inhaling, SynchronizationStage.Inhaled);
+    foreach(var target in SyncTargets)
+    {
+      target.Refresh();
+    }
     RaisePropertyChanged(nameof(PrimaryImportSourceCount));
     RaisePropertyChanged(nameof(PrimaryChangedChunkCount));
+  }
+
+  private void Exhale()
+  {
+    StartStage(SynchronizationStage.Inhaled, SynchronizationStage.Exhaling);
+    SyncModel.Exhale();
+    CompleteStage(SynchronizationStage.Exhaling, SynchronizationStage.Exhaled);
+    foreach(var target in SyncTargets)
+    {
+      target.Refresh();
+    }
+    RaisePropertyChanged(nameof(PrimaryExportTargetCount));
+  }
+
+  private void Save()
+  {
+    StartStage(SynchronizationStage.Exhaled, SynchronizationStage.Saving);
+    MessageBox.Show(
+      "Saving the synchronization results is not implemented yet",
+      "Under Development",
+      MessageBoxButton.OK,
+      MessageBoxImage.Warning);
+    Stage = SynchronizationStage.Error;
   }
 
 

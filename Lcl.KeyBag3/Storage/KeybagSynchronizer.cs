@@ -15,6 +15,67 @@ using Lcl.KeyBag3.Model;
 namespace Lcl.KeyBag3.Storage;
 
 /// <summary>
+/// The stages of synchronization.
+/// </summary>
+public enum SynchronizationStage
+{
+  /// <summary>
+  /// An error occurred during synchronization and it was aborted.
+  /// </summary>
+  Error = -1,
+
+  /// <summary>
+  /// Synchronization is not started yet.
+  /// </summary>
+  NotStarted = 0,
+
+  /// <summary>
+  /// Target keybags are being loaded. This is potentially a long
+  /// operation, since it may involve the operating system connecting
+  /// to remote storage or spinning up disks that are in power-saving
+  /// mode.
+  /// </summary>
+  Loading,
+
+  /// <summary>
+  /// Target keybags have been loaded or are found to be unavailable
+  /// or incompatible.
+  /// </summary>
+  Loaded,
+
+  /// <summary>
+  /// The primary keybag is being updated with new and modified chunks
+  /// from the target keybags.
+  /// </summary>
+  Inhaling,
+
+  /// <summary>
+  /// The primary keybag has been updated with new and modified chunks
+  /// </summary>
+  Inhaled,
+
+  /// <summary>
+  /// The target keybags are being updated with new and modified chunks.
+  /// </summary>
+  Exhaling,
+
+  /// <summary>
+  /// The target keybags have been updated with new and modified chunks.
+  /// </summary>
+  Exhaled,
+
+  /// <summary>
+  /// The primary keybag and target keybags are being saved.
+  /// </summary>
+  Saving,
+
+  /// <summary>
+  /// The primary keybag and target keybags have been saved.
+  /// </summary>
+  Done,
+}
+
+/// <summary>
 /// Stateful class that synchronizes the synchronization
 /// targets in a <see cref="KeybagSet"/> with that set's
 /// primary keybag.
@@ -80,25 +141,40 @@ public class KeybagSynchronizer
   public int PrimaryExportTargetCount { get; private set; }
 
   /// <summary>
+  /// Try loading each target keybag. After this call, the
+  /// target keybags are either loaded or have an error message.
+  /// </summary>
+  public void TryLoadTargets(ChunkCryptor cryptor) 
+  {
+    foreach(var target in Targets)
+    {
+      target.TryLoad(cryptor);
+    }
+  }
+
+  /// <summary>
   /// Donation phase: copy new and modified chunks from all
   /// targets into the primary keybag. But don't forget to load
   /// the target keybags first.
   /// </summary>
-  /// <param name="cryptor">
-  /// The key to validate correct loading of the target keybags.
-  /// </param>
   /// <returns>
   /// The number of target keybags that donated any chunks at all.
   /// </returns>
-  public int LoadAndDonateToPrimary(
-    ChunkCryptor cryptor)
+  public int Inhale()
   {
     foreach(var target in Targets)
     {
-      if(target.TryLoad(cryptor))
+      var status = target.GetStatus();
+      if(!status.IsAvailable)
       {
-        target.Donate(Primary);
+        continue;
       }
+      if(target.TargetKeybag == null)
+      {
+        throw new InvalidOperationException(
+          "Missing call to TryLoad().");
+      }
+      target.Donate(Primary);
     }
     var count = Targets.Count(t => t.DonorChunkCount>0);
     PrimaryImportSourceCount = count;
@@ -114,7 +190,7 @@ public class KeybagSynchronizer
   /// <returns>
   /// The number of target keybags that received any chunks at all.
   /// </returns>
-  public int ReceiveFromPrimary()
+  public int Exhale()
   {
     foreach(var target in Targets)
     {

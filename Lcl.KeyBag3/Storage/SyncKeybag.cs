@@ -15,12 +15,42 @@ using Lcl.KeyBag3.Model;
 namespace Lcl.KeyBag3.Storage;
 
 /// <summary>
+/// An immutable record that describes the status of a keybag
+/// in a consistent view.
+/// </summary>
+/// <param name="IsAvailable">
+/// True if the keybag may be available for synchronization.
+/// False if it definitely is not available and should be ignored.
+/// </param>
+/// <param name="Error">
+/// If not null: a description of the problem preventing proper
+/// loading.
+/// </param>
+/// <param name="TargetKeybag">
+/// If not null: the successfully loaded keybag.
+/// </param>
+public record SyncKeybagStatus(
+  bool IsAvailable,
+  string? Error,
+  Keybag? TargetKeybag)
+{
+  /// <summary>
+  /// True if the keybag has been loaded successfully.
+  /// Implies <see cref="IsAvailable"/> == true and
+  /// <see cref="TargetKeybag"/> != null.
+  /// </summary>
+  public bool IsLoaded => IsAvailable && TargetKeybag != null;
+}
+
+/// <summary>
 /// Represents a keybag in a <see cref="KeybagSet"/> that
 /// is to be synchronized with the primary keybag in that set
 /// during the synchronization process.
 /// </summary>
 public class SyncKeybag
 {
+  private object _lock = new object();
+
   /// <summary>
   /// Create a new SyncKeybag
   /// </summary>
@@ -35,7 +65,7 @@ public class SyncKeybag
     RecipientChunkCount = 0;
     if(!IsAvailable)
     {
-      Error = "Keybag file not available";
+      Error = "Target file not available";
     }
   }
 
@@ -53,14 +83,27 @@ public class SyncKeybag
   /// True if this keybag file is available for synchronization,
   /// false if it should be ignored. Also changed to false if
   /// the keybag failed to load.
+  /// (must only be set through <see cref="SetStatus(bool, string?, Keybag?)"/>)
   /// </summary>
   public bool IsAvailable { get; private set; }
 
   /// <summary>
+  /// True if the keybag has been loaded successfully.
+  /// </summary>
+  public bool IsLoaded => GetStatus().IsLoaded;
+
+  /// <summary>
   /// If not null: a description of the problem preventing proper
   /// synchronization.
+  /// (must only be set through <see cref="SetStatus(bool, string?, Keybag?)"/>)
   /// </summary>
   public string? Error { get; private set; }
+
+  /// <summary>
+  /// The keybag holding this target's content.
+  /// (must only be set through <see cref="SetStatus(bool, string?, Keybag?)"/>)
+  /// </summary>
+  public Keybag? TargetKeybag { get; private set; }
 
   /// <summary>
   /// The number of chunks this keybag file donated to the primary keybag.
@@ -73,9 +116,41 @@ public class SyncKeybag
   public int RecipientChunkCount { get; private set; }
 
   /// <summary>
-  /// The keybag holding this target's content.
+  /// Return a thread-safe snapshot of the current status fields.
   /// </summary>
-  public Keybag? TargetKeybag { get; private set; }
+  public SyncKeybagStatus GetStatus()
+  {
+    lock(_lock)
+    {
+      return new SyncKeybagStatus(IsAvailable, Error, TargetKeybag);
+    }
+  }
+
+  /// <summary>
+  /// Set the status fields together, in a thread-safe way.
+  /// </summary>
+  public void SetStatus(
+    bool isAvailable,
+    string? error,
+    Keybag? targetKeybag)
+  {
+    if(!String.IsNullOrEmpty(error) && isAvailable)
+    {
+      throw new ArgumentException(
+        "If an error is provided, 'isAvailable' should be false");
+    }
+    if(targetKeybag != null && !isAvailable)
+    {
+      throw new ArgumentException(
+        "If a keybag is provided, 'isAvailable' should be true");
+    }
+    lock(_lock)
+    {
+      IsAvailable = isAvailable;
+      Error = error;
+      TargetKeybag = targetKeybag;
+    }
+  }
 
   /// <summary>
   /// Try loading the keybag file for this target. If this fails,
@@ -89,11 +164,12 @@ public class SyncKeybag
   /// </returns>
   public bool TryLoad(ChunkCryptor cryptor)
   {
-    if(!IsAvailable)
+    var status = GetStatus();
+    if(!status.IsAvailable)
     {
       return false;
     }
-    if(TargetKeybag != null)
+    if(status.TargetKeybag != null)
     {
       return true;
     }
@@ -105,18 +181,16 @@ public class SyncKeybag
     }
     catch(Exception ex)
     {
-      Error = "Load Error: " + ex.Message;
-      IsAvailable = false;
+      SetStatus(false, "Load Error: " + ex.Message, null);
       return false;
     }
     if(!kbg.IsSealValidated)
     {
       // unlikely to happen, but just in case (this would already throw above)
-      Error = "Seal validation failed";
-      IsAvailable = false;
+      SetStatus(false, "Seal validation failed", null);
       return false;
     }
-    TargetKeybag = kbg;
+    SetStatus(true, null, kbg);
     return true;
   }
 
@@ -131,16 +205,17 @@ public class SyncKeybag
   public void Donate(
     Keybag primary)
   {
-    if(!IsAvailable)
+    var status = GetStatus();
+    if(!status.IsAvailable)
     {
       return;
     }
-    if(TargetKeybag == null)
+    if(!status.IsLoaded)
     {
       throw new InvalidOperationException(
         "Expecting sync keybag to have been loaded already");
     }
-    foreach(var syncChunk in TargetKeybag.Chunks.CurrentChunks)
+    foreach(var syncChunk in TargetKeybag!.Chunks.CurrentChunks)
     {
       if(syncChunk.Kind != ChunkKind.File)
       {
@@ -160,8 +235,7 @@ public class SyncKeybag
           Trace.TraceError(
             $"File header does not match primary: {Target.Location}. " +
             "Aborting Donate phase.");
-          Error = "File header does match. Import aborted.";
-          IsAvailable = false;
+          SetStatus(false, "File header mismatch", null);
           return;
         }
       }
@@ -177,11 +251,12 @@ public class SyncKeybag
   public void Receive(
     Keybag primary)
   {
-    if(!IsAvailable)
+    var status = GetStatus();
+    if(!status.IsAvailable)
     {
       return;
     }
-    if(TargetKeybag == null)
+    if(!status.IsLoaded)
     {
       throw new InvalidOperationException(
         "Expecting sync keybag to have been loaded already");
@@ -190,16 +265,34 @@ public class SyncKeybag
     {
       if(primaryChunk.Kind != ChunkKind.File)
       {
-        var syncChunk = TargetKeybag.Chunks.FindChunk(primaryChunk.NodeId);
+        var syncChunk = TargetKeybag!.Chunks.FindChunk(primaryChunk.NodeId);
         if(syncChunk == null
           || syncChunk.EditId.Value < primaryChunk.EditId.Value)
         {
-          // only import if the sync does not have a newer or same version
-          TargetKeybag.Chunks.PutChunk(primaryChunk.Clone());
+          // Only import if the target does not have a newer or same version
+          // (it should never have a newer version, but same is quite likely)
+          TargetKeybag!.Chunks.PutChunk(primaryChunk.Clone());
           RecipientChunkCount++;
         }
       }
     }
+  }
+
+  /// <summary>
+  /// Returns true if the keybag has been loaded and has unsaved changes.
+  /// </summary>
+  public bool HasUnsaved()
+  {
+    var status = GetStatus();
+    if(!status.IsAvailable)
+    {
+      return false;
+    }
+    if(!status.IsLoaded)
+    {
+      return false;
+    }
+    return TargetKeybag!.Chunks.CurrentChunks.Any(c => c.FileOffset == null);
   }
 
   // --

@@ -91,6 +91,14 @@ public partial class App: Application
         "/Keybag3/Fore/Neutral"
       ], "#EEFFFFFF");
 
+    bc.AddAliases([
+        "/Keybag3/Back/Changed",
+      ], "#288888EE");
+
+    bc.AddAliases([
+        "/Keybag3/Fore/Changed",
+      ], "#EE8888EE");
+
     // Tag Class Colors (Fore is darker)
 
     bc.AddAliases([
