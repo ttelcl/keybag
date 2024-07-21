@@ -1,0 +1,64 @@
+﻿<Application x:Class="Keybag3.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Keybag3"
+             xmlns:main="clr-namespace:Keybag3.Main"
+             xmlns:converters="clr-namespace:Keybag3.Converters"
+             xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+             Startup="App_Startup"
+             SessionEnding="Application_SessionEnding"
+             Exit="Application_Exit">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- See https://mahapps.com/docs/themes/usage -->
+                <!-- MahApps.Metro resource dictionaries. Make sure that all file names are Case Sensitive! -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.FlatButton.xaml" />
+                <!-- Override Treeview style -->
+                <ResourceDictionary Source="pack://application:,,,/Keybag3;component/CustomizedStyles/CustomTreeView.xaml" />
+                <!-- Theme setting - (OLD; now changed dynamically) -->
+                <!--<ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Olive.xaml" />-->
+            </ResourceDictionary.MergedDictionaries>
+            <!-- Connect overrides for treeview -->
+            <Style BasedOn="{StaticResource Kb3TreeView}" TargetType="TreeView" />
+            <Style BasedOn="{StaticResource Kb3TreeViewItem}" TargetType="TreeViewItem" />
+
+            <!-- Instead of a mah:ControlsHelper.ContentCharacterCasing="Normal" on each groupbox -->
+            <Style TargetType="{x:Type GroupBox}" BasedOn="{StaticResource MahApps.Styles.GroupBox}">
+                <Setter Property="mah:ControlsHelper.ContentCharacterCasing" Value="Normal" />
+            </Style>
+            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MahApps.Styles.Button}">
+                <Setter Property="mah:ControlsHelper.ContentCharacterCasing" Value="Normal" />
+            </Style>
+            <Style TargetType="{x:Type TabItem}" BasedOn="{StaticResource MahApps.Styles.TabItem}">
+                <Setter Property="mah:HeaderedControlHelper.HeaderFontSize" Value="20"/>
+            </Style>
+            <converters:StringMatchVisibilityConverter x:Key="VisibleIfString"/>
+            <converters:PrefixBrushConverter x:Key="Kb3Back" Prefix="/Keybag3/Back/"/>
+            <converters:PrefixBrushConverter x:Key="Kb3Fore" Prefix="/Keybag3/Fore/"/>
+            <converters:PrefixBrushConverter x:Key="Kb3" Prefix="/Keybag3/"/>
+            <!--
+              Usage examples:
+              {Binding LockStatus, Converter={StaticResource Kb3Fore}}
+              {Binding LockStatus, Converter={StaticResource Kb3}, ConverterParameter=Fore}
+              Both might select for instance the color mapped to "/Keybag3/Fore/Unlocked"
+            -->
+            <converters:NullVisibilityConverter
+                x:Key="VisibleIfNotNull"/>
+            <converters:NullVisibilityConverter
+                x:Key="VisibleIfNull"
+                NullValue="{x:Static Visibility.Visible}"
+                NotNullValue="{x:Static Visibility.Collapsed}"/>
+            <converters:StringMatchConverter x:Key="StringMatchConv"/>
+            <converters:ValueMatchConverter x:Key="ValueIs"/>
+            <converters:VisibleIfConverter
+                x:Key="VisibleIf"/>
+            <converters:VisibleIfConverter
+                x:Key="VisibleIfNot"
+                MatchValue="{x:Static Visibility.Collapsed}"
+                MismatchValue="{x:Static Visibility.Visible}"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

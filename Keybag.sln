@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B16445EC-0200-4694-B593-738FB5CFF92E}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{68C25BAF-9031-47E4-979C-E1F2CCDC2D68}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GUI", "GUI", "{76E4DBA5-251C-4C35-9C9F-63ED94CBC99A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{E5D64CB0-4D29-4CD9-8BF2-2E198A864E06}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lcl.KeyBag3", "Lcl.KeyBag3\Lcl.KeyBag3.csproj", "{0D238B0B-1801-4D9C-BB6A-50DA6E92366F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTest.KeyBag3", "UnitTest.KeyBag3\UnitTest.KeyBag3.csproj", "{5E11EA35-3C7B-4B52-B1A1-A74B26BA1908}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Keybag3", "Keybag3\Keybag3.csproj", "{2FBCD848-58BB-4CF2-8FC3-4DE76AD0D55A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D238B0B-1801-4D9C-BB6A-50DA6E92366F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D238B0B-1801-4D9C-BB6A-50DA6E92366F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D238B0B-1801-4D9C-BB6A-50DA6E92366F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D238B0B-1801-4D9C-BB6A-50DA6E92366F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E11EA35-3C7B-4B52-B1A1-A74B26BA1908}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E11EA35-3C7B-4B52-B1A1-A74B26BA1908}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E11EA35-3C7B-4B52-B1A1-A74B26BA1908}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E11EA35-3C7B-4B52-B1A1-A74B26BA1908}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FBCD848-58BB-4CF2-8FC3-4DE76AD0D55A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FBCD848-58BB-4CF2-8FC3-4DE76AD0D55A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FBCD848-58BB-4CF2-8FC3-4DE76AD0D55A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FBCD848-58BB-4CF2-8FC3-4DE76AD0D55A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0D238B0B-1801-4D9C-BB6A-50DA6E92366F} = {E5D64CB0-4D29-4CD9-8BF2-2E198A864E06}
+		{5E11EA35-3C7B-4B52-B1A1-A74B26BA1908} = {68C25BAF-9031-47E4-979C-E1F2CCDC2D68}
+		{2FBCD848-58BB-4CF2-8FC3-4DE76AD0D55A} = {76E4DBA5-251C-4C35-9C9F-63ED94CBC99A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D52F3CE0-4AA2-4C41-8C84-AA71B04D397E}
+	EndGlobalSection
+EndGlobal

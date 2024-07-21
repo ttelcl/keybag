@@ -1,0 +1,156 @@
+﻿<UserControl
+    x:Class="Keybag3.Main.KeybagContent.KeybagView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:Keybag3.Main.KeybagContent"
+    xmlns:db="clr-namespace:Keybag3.Main.Database"
+    xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    mc:Ignorable="d" 
+    d:DataContext="{d:DesignInstance local:KeybagViewModel, IsDesignTimeCreatable=False}"
+    d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style TargetType="Grid" x:Key="Blurrable">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Owner.ShowingContent}" Value="False">
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <BlurEffect Radius="22" KernelType="Gaussian"/>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+    <Grid
+        Visibility="{Binding Converter={StaticResource VisibleIfNotNull}}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="2*" MaxWidth="360" MinWidth="260"/>
+            <ColumnDefinition Width="4*"/>
+        </Grid.ColumnDefinitions>
+        <!-- Column for the Autohide timer -->
+        <Border
+            Grid.Column="0"
+            BorderThickness="1" CornerRadius="5" Margin="3,3"
+            BorderBrush="{DynamicResource MahApps.Brushes.Accent2}"
+            MinWidth="8"
+            ToolTip="Autohide timer progress">
+            <Border.Background>
+                <LinearGradientBrush>
+                    <!--<GradientStop Offset="0" Color="{DynamicResource MahApps.Colors.Accent3}" />
+                    <GradientStop Offset="0.5" Color="{DynamicResource MahApps.Colors.Highlight}" />-->
+                    <!-- #FF008A00 -->
+                    <GradientStop Offset="0" Color="#77448A44" />
+                    <GradientStop Offset="0.5" Color="#FF008A00" />
+                    <GradientStop Offset="0.7" Color="#CCFFFF00" />
+                    <GradientStop Offset="0.9" Color="#CCFF0000" />
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <!-- Left column -->
+        <Grid Grid.Column="1" Style="{DynamicResource Blurrable}">
+            <Grid.Resources>
+                <HierarchicalDataTemplate
+                    DataType="{x:Type local:EntryViewModel}"
+                    ItemsSource="{Binding Path=ChildList}">
+                    <local:EntryNodeView/>
+                </HierarchicalDataTemplate>
+            </Grid.Resources>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <GroupBox Grid.Row="0" Padding="1">
+                <GroupBox.Header>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="Filter"/>
+                        <ToggleButton
+                            DockPanel.Dock="Right"
+                            IsChecked="{Binding FilterExpanded}"
+                            Style="{DynamicResource MahApps.Styles.ToggleButton.Circle}"
+                            MinWidth="20" MinHeight="20" BorderThickness="0"
+                            Margin="0,0,2,0">
+                            <iconPacks:PackIconMaterial
+                                Kind="{Binding FilterExpandedIcon}"
+                                Height="18" Width="18"/>
+                        </ToggleButton>
+                        <StackPanel/>
+                    </DockPanel>
+                </GroupBox.Header>
+                <StackPanel
+                    Orientation="Vertical"
+                    Visibility="{Binding FilterExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <local:SearchFilterView DataContext="{Binding SearchFilter}" />
+                    <local:ScopeFilterView DataContext="{Binding ScopeFilter}" />
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Header="Entries" Grid.Row="1">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top">
+                        <Button
+                            DockPanel.Dock="Right"
+                            Command="{Binding StartNewRootEntryCommand}"
+                            BorderThickness="1" Margin="0,8" Padding="2,0" MinHeight="10"
+                            Visibility="{Binding SelectedEntry, Converter={StaticResource VisibleIfNull}}"
+                            Style="{DynamicResource MahApps.Styles.Button}"
+                            ToolTip="Create Top Level Entry">
+                            <iconPacks:PackIconMaterial
+                                    Kind="Plus" VerticalAlignment="Center"
+                                    Grid.Column="0" Height="14" Width="14"/>
+                        </Button>
+                        <Button 
+                            Style="{DynamicResource MahApps.Styles.Button.Square}"
+                            BorderThickness="0" FontSize="18"
+                            Command="{Binding DeselectCommand}"
+                            HorizontalContentAlignment="Stretch">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <iconPacks:PackIconMaterial
+                                    Kind="Database" VerticalAlignment="Center"
+                                    Grid.Column="0" Padding="2,0" Height="20" Width="20"/>
+                                <TextBlock
+                                    Grid.Column="1" Padding="10,0,0,4" MinWidth="100"
+                                    VerticalAlignment="Top"
+                                    Text="{Binding Owner.Tag}" TextTrimming="CharacterEllipsis"/>
+                            </Grid>
+                        </Button>
+                    </DockPanel>
+                    <TreeView ItemsSource="{Binding ChildList}"
+                              FontSize="15"
+                              Style="{StaticResource Kb3TreeView}"
+                              TreeViewItem.Selected="TreeView_Selected"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="{x:Type TreeViewItem}" 
+                                   BasedOn="{StaticResource Kb3TreeViewItem}">
+                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                                <Setter Property="MinHeight" Value="20"/>
+                                <!-- Without the following two, there will be data binding warnings -->
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                    </TreeView>
+                </DockPanel>
+            </GroupBox>
+        </Grid>
+        <!-- Main column -->
+        <Grid Grid.Column="2"
+              Visibility="{Binding SelectedEntry, Converter={StaticResource VisibleIfNull}}">
+            <TextBlock FontSize="20" Margin="3,3">
+                No entry selected (TODO: show keybag info)
+            </TextBlock>
+        </Grid>
+        <Grid Grid.Column="2" Style="{DynamicResource Blurrable}"
+              Visibility="{Binding SelectedEntry, Converter={StaticResource VisibleIfNotNull}}">
+            <local:EntryView DataContext="{Binding SelectedEntry}"/>
+        </Grid>
+    </Grid>
+</UserControl>

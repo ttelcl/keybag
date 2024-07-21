@@ -1,0 +1,55 @@
+﻿<UserControl
+    x:Class="Keybag3.Main.Database.DbEntryView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:local="clr-namespace:Keybag3.Main.Database"
+    mc:Ignorable="d" 
+    d:DataContext="{d:DesignInstance local:KeybagSetViewModel, IsDesignTimeCreatable=False}"
+    d:DesignHeight="100" d:DesignWidth="800">
+    <Border
+        Grid.Column="1"
+        BorderThickness="1" CornerRadius="10"
+        BorderBrush="{Binding LockStatus, Converter={StaticResource Kb3Fore}}">
+        <Grid Margin="0,3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" MinWidth="50"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+            <iconPacks:PackIconMaterial
+                Grid.Row="0" Grid.Column="0" Height="20" Width="20"
+                Margin="15,0,15,5" VerticalAlignment="Bottom"
+                ToolTip="{Binding LockStatus}"
+                Kind="{Binding LockIcon}"
+                Foreground="{Binding LockStatus, Converter={StaticResource Kb3}, ConverterParameter=Fore}"/>
+            <TextBlock 
+                Grid.Row="0" Grid.Column="1" FontSize="20" 
+                Margin="5,0,5,5" Padding="15,0"
+                Text="{Binding Tag}"
+                VerticalAlignment="Center"
+                TextAlignment="Center"/>
+            <Button
+                Grid.Row="0" Grid.Column="2" Command="{Binding ViewSetCommand}"
+                Padding="20,0" Margin="10,0"
+                ToolTip="Open / View / Manage this Keybag">
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconMaterial
+                        Kind="TransferRight" Padding="2,0" Height="18" Width="24" />
+                </StackPanel>
+            </Button>
+            <TextBlock
+                Grid.Row="0" Grid.Column="3" FontSize="11"
+                Margin="15,0" FontStyle="Italic" Opacity="0.5"
+                Text="{Binding Id26}"  VerticalAlignment="Top"
+                TextAlignment="Right"/>
+        </Grid>
+    </Border>
+</UserControl>
