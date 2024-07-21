@@ -9,6 +9,16 @@
     <ApplicationIcon>Assets\three-keys-256.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!--
+      This prevents other language resources being emitted.
+      In particular, without this setting, the german resources from
+      MahApps.Metro would be included.
+    -->
+    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+
   <ItemGroup>
     <Resource Include="Assets\three-keys-256.ico" />
     <Resource Include="Assets\three-keys-256.png" />
