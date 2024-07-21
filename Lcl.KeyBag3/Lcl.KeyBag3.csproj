@@ -5,10 +5,47 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Title>Core (non-GUI) Keybag3 logic</Title>
+    <Company>ttelcl</Company>
+    <Authors>ttelcl</Authors>
+    <Copyright>(c) 2024 ttelcl</Copyright>
+    <Product>Keybag3</Product>
+    <Description>Core non-GUI Keybag3 logic</Description>
+    <PackageProjectUrl>https://github.com/ttelcl/keybag</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ttelcl/keybag</RepositoryUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <VersionPrefix>3.0.1</VersionPrefix>
+    <!--
+      PackageId notes:
+      - Prefix with "TteLcl." to avoid conflicts with other packages on NuGet.
+        For now, this is a mostly personal project, so it's unlikely to be a problem,
+        but someone else already claimed the "Lcl" prefix on NuGet.
+      - The "3" is dropped from the package name because the version
+        number already includes it (it leads to a confusing "...3.3..." if left in)
+    -->
+    <PackageId>TteLcl.Lcl.Keybag</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE" Link="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
