@@ -348,7 +348,9 @@ public class ImportConnectViewModel: ViewModelBase<KeybagDbViewModel>, IHasViewT
         "Please unlock the file first, by entering its key");
       return;
     }
-    if(FileRelation != KeybagRelation.NewSet || String.IsNullOrEmpty(FileName))
+    if(
+      (FileRelation != KeybagRelation.NewSet && FileRelation != KeybagRelation.Extern)
+      || String.IsNullOrEmpty(FileName))
     {
       throw new InvalidOperationException(
         "Internal error - incorrect state");
