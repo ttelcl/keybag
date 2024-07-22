@@ -275,6 +275,15 @@ public class SynchronizationViewModel: ViewModelBase
 
   private void PopMe()
   {
+    if(Stage < SynchronizationStage.NotStarted
+      || Stage > SynchronizationStage.Loaded)
+    {
+      // Anything might have happened to the primary keybag,
+      // so reload it just to be safe. This can only be safely
+      // skipped if we didn't even get to the inhale phase and
+      // there were no errors.
+      Target.Owner.Reload(true);
+    }
     DbModel.AppModel.PopOverlay(this);
   }
 

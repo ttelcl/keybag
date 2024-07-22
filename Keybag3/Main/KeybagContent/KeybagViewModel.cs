@@ -327,14 +327,6 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
   {
     HasUnsavedChunks = ChunkPairs.Chunks.Any(
       pair => pair.PersistChunk == null || !pair.PersistChunk.FileOffset.HasValue);
-
-    //// TEMP DIAGNOSTICS
-    //var countMissing = ChunkPairs.Chunks.Count(
-    //  pair => pair.PersistChunk == null); // should be 0
-    //var countUnsaved = ChunkPairs.Chunks.Count(
-    //  pair => pair.PersistChunk != null && !pair.PersistChunk.FileOffset.HasValue);
-    //Trace.TraceError(
-    //  $"Needs saving diagnostics: {countMissing} missing; {countUnsaved} unsaved");
   }
 
   public bool HasUnsavedChunks {
