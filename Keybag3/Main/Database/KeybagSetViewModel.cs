@@ -71,9 +71,15 @@ public class KeybagSetViewModel:
         && !KeybagModel.HasUnsavedChunks);
     DiscardCommand = new DelegateCommand(
       p => { Discard(); },
-      p => KeybagModel != null
+      p => KeyKnownAndShowing
+        && KeybagModel != null
         && KeybagModel.Decoded
         && KeybagModel.HasUnsavedChunks);
+    EjectCommand = new DelegateCommand(
+      p => { Eject(); },
+      p => KeyKnown
+        && KeybagModel != null
+        && !KeybagModel.HasUnsavedChunks);
     Refresh();
   }
 
@@ -96,6 +102,8 @@ public class KeybagSetViewModel:
   public ICommand DiscardCommand { get; }
 
   public ICommand ShowSyncOverlayCommand { get; }
+
+  public ICommand EjectCommand { get; }
 
   private void BackToDatabase()
   {
@@ -350,5 +358,20 @@ public class KeybagSetViewModel:
 
   public string ShowIcon {
     get => ShowingContent ? "EyeOff" : "Eye";
+  }
+
+  private void Eject()
+  {
+    KeybagModel = null;
+    var keyRing = Owner.AppModel.Services.KeyRing;
+    keyRing.Remove(Model.KeyGuid);
+    KeyKnown = false;
+    if(ShowingContent)
+    {
+      RaisePropertyChanged(nameof(ShowingContent));
+      RaisePropertyChanged(nameof(ShowText));
+      RaisePropertyChanged(nameof(ShowIcon));
+    }
+    Owner.AppModel.CurrentView = Owner;
   }
 }

@@ -63,6 +63,20 @@ public class KeyRing: IDisposable
   }
 
   /// <summary>
+  /// Remove a key.
+  /// </summary>
+  public void Remove(Guid keyId)
+  {
+    ObjectDisposedException.ThrowIf(_disposed, this);
+    var key = Find(keyId);
+    if(key != null)
+    {
+      key.Dispose();
+      _keys.Remove(keyId);
+    }
+  }
+
+  /// <summary>
   /// Dispose all stored keys and mark this class as disposed
   /// </summary>
   public void Dispose()

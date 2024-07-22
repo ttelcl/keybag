@@ -192,6 +192,7 @@ public sealed class ChunkCryptor: IDisposable
     StoredChunk node,
     Span<byte> plaintext)
   {
+    ObjectDisposedException.ThrowIf(_aesgcm==null, this);
     Span<byte> tmp = stackalloc byte[8];
     Span<byte> nonce = stackalloc byte[12];
     Span<byte> aad = stackalloc byte[16];
@@ -261,6 +262,7 @@ public sealed class ChunkCryptor: IDisposable
   public CryptoBuffer<byte> DecryptContent(
     StoredChunk node)
   {
+    ObjectDisposedException.ThrowIf(_aesgcm==null, this);
     var buffer = new CryptoBuffer<byte>(node.Content.Length);
     try
     {
@@ -287,6 +289,7 @@ public sealed class ChunkCryptor: IDisposable
   public CryptoBuffer<byte>? TryDecryptContent(
     StoredChunk node)
   {
+    ObjectDisposedException.ThrowIf(_aesgcm==null, this);
     try
     {
       return DecryptContent(node);
@@ -316,6 +319,7 @@ public sealed class ChunkCryptor: IDisposable
     StoredChunk source,
     ZapBuffer<byte> sink)
   {
+    ObjectDisposedException.ThrowIf(_aesgcm==null, this);
     sink.Clear();
     try
     {
@@ -379,6 +383,7 @@ public sealed class ChunkCryptor: IDisposable
     ChunkId? editIdDangerous = null
     )
   {
+    ObjectDisposedException.ThrowIf(_aesgcm==null, this);
     Span<byte> tmp = stackalloc byte[8];
     Span<byte> nonce = stackalloc byte[12];
     Span<byte> aad = stackalloc byte[16];
