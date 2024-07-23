@@ -106,12 +106,6 @@ public class SyncKeybag
   public Keybag? TargetKeybag { get; private set; }
 
   /// <summary>
-  /// The target history for <see cref="TargetKeybag"/>
-  /// (created in <see cref="SetStatus(bool, string?, Keybag?)"/>)
-  /// </summary>
-  public KeybagHistory? TargetHistory { get; private set;}
-
-  /// <summary>
   /// The number of chunks this keybag file donated to the primary keybag.
   /// </summary>
   public int DonorChunkCount { get; private set; }
@@ -150,16 +144,11 @@ public class SyncKeybag
       throw new ArgumentException(
         "If a keybag is provided, 'isAvailable' should be true");
     }
-    var targetHistory =
-      (targetKeybag == null)
-      ? null
-      : new KeybagHistory(targetKeybag, Target.Location);
     lock(_lock)
     {
       IsAvailable = isAvailable;
       Error = error;
       TargetKeybag = targetKeybag;
-      TargetHistory = targetHistory;
     }
   }
 
