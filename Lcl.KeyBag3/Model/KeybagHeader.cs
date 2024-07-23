@@ -34,10 +34,10 @@ public enum KeybagMode
   Kb3 = 1,
 
   /// <summary>
-  /// A keybag trashcan / backup file
+  /// A keybag history file
   /// </summary>
   /// <remarks>
-  /// These files have the extension *.kbx3.
+  /// These files have the extension *.kb3his.
   /// They contain chunks that have been removed from a normal keybag,
   /// acting as a last resort backup.
   /// They do not have a seal chunk.
@@ -74,7 +74,7 @@ public class KeybagHeader
   /// fields of the file header.
   /// </param>
   /// <param name="expectedMode">
-  /// The expected mode of the keybag file (normal *.kb3 or trashcan *.kbx3).
+  /// The expected mode of the keybag file (normal *.kb3 or history *.kb3his).
   /// Defaults to <see cref="KeybagMode.Kb3"/>
   /// </param>
   public KeybagHeader(
@@ -85,7 +85,7 @@ public class KeybagHeader
     StoredChunk fileNode,
     KeybagMode expectedMode = KeybagMode.Kb3)
   {
-    var mode = CheckSignature(signature, expectedMode);
+    Mode = CheckSignature(signature, expectedMode);
     var minorFormatVersion = (short)(formatVersion & 0x0000FFFF);
     var majorFormatVersion = (short)((formatVersion >> 16) & 0x0000FFFF);
     if(majorFormatVersion != CurrentFormatVersionMajor)
@@ -149,7 +149,7 @@ public class KeybagHeader
   public short MinorFormatVersion { get; }
 
   /// <summary>
-  /// The mode of the keybag file (normal *.kb3 or trashcan *.kbx3).
+  /// The mode of the keybag file (normal *.kb3 or trashcan *.kb3his).
   /// </summary>
   public KeybagMode Mode { get; }
 
@@ -187,7 +187,7 @@ public class KeybagHeader
   public const int SignatureKb3 = 0x3347424B;
 
   /// <summary>
-  /// The signature value ('KBX3') for keybag trashcan files
+  /// The signature value ('KBX3') for keybag history files
   /// </summary>
   public const int SignatureKbx = 0x3358424B;
 
@@ -258,7 +258,7 @@ public class KeybagHeader
   /// The signature bytes to check (as little-endian integer)
   /// </param>
   /// <param name="expectedMode">
-  /// The keybag mode expected (normal *.kb3 or trashcan *.kbx3)
+  /// The keybag mode expected (normal *.kb3 or history *.kb3his)
   /// </param>
   /// <returns>
   /// The recognized keybag mode on success (an exception is
@@ -282,7 +282,7 @@ public class KeybagHeader
         if(expectedMode != KeybagMode.Kbx)
         {
           throw new ArgumentException(
-            "Incorrect keybag file signature - this does not look like a valid *.kbx3 file");
+            "Incorrect keybag file signature - this does not look like a valid *.kb3his file");
         }
         return KeybagMode.Kbx;
       default:
@@ -298,7 +298,7 @@ public class KeybagHeader
   /// The file to read
   /// </param>
   /// <param name="expectedMode">
-  /// The expected mode of the keybag file (normal *.kb3 or trashcan *.kbx3).
+  /// The expected mode of the keybag file (normal *.kb3 or history *.kb3his).
   /// Defaults to <see cref="KeybagMode.Kb3"/>
   /// </param>
   /// <returns></returns>
@@ -339,11 +339,21 @@ public class KeybagHeader
   /// Create a new <see cref="KeybagHeader"/> by reading
   /// the header of the named keybag file
   /// </summary>
+  /// <param name="fileName">
+  /// The name of the keybag (*.kb3) or keybag history file
+  /// (*.kb3his). Must end with either of these extensions.
+  /// </param>
   public static KeybagHeader FromFile(string fileName)
   {
+    var mode = Path.GetExtension(fileName).ToLowerInvariant() switch {
+      ".kb3" => KeybagMode.Kb3,
+      ".kb3his" => KeybagMode.Kbx,
+      _ => throw new ArgumentException(
+        "Unsupported keybag file extension")
+    };
     using(var stream = File.OpenRead(fileName))
     {
-      return FromFile(stream);
+      return FromFile(stream, mode);
     }
   }
 
@@ -402,8 +412,15 @@ public class KeybagHeader
     FileEdit = maxEditId;
     Span<byte> buffer = stackalloc byte[16];
     var writer = new SpanWriter();
+    var signature = 
+      Mode switch {
+        KeybagMode.Kb3 => SignatureKb3,
+        KeybagMode.Kbx => SignatureKbx,
+        _ => throw new InvalidOperationException(
+          "Invalid keybag mode")
+      };
     writer
-      .WriteI32(buffer, SignatureKb3)
+      .WriteI32(buffer, signature)
       .WriteI16(buffer, CurrentFormatVersionMinor)
       .WriteI16(buffer, CurrentFormatVersionMajor)
       .WriteChunkId(buffer, FileEdit)
@@ -414,4 +431,55 @@ public class KeybagHeader
     FileChunk.WriteToFile(file, true);
   }
 
+  /// <summary>
+  /// Create a new Keybag History header matching this keybag
+  /// </summary>
+  /// <returns></returns>
+  public KeybagHeader CreateHistoryHeader()
+  {
+    if(Mode != KeybagMode.Kb3)
+    {
+      throw new InvalidOperationException(
+        "Cannot create a history header for a history file");
+    }
+    return new KeybagHeader(
+      SignatureKbx,
+      CurrentFormatVersion,
+      FileId, // (!) use File ID, not File Edit
+      KeyDescriptor,
+      FileChunk.Clone(),
+      KeybagMode.Kbx);
+  }
+
+  /// <summary>
+  /// Verify that the provided history file header matches this
+  /// keybag header
+  /// </summary>
+  public void ValidateMatchingHeader(
+    KeybagHeader historyHeader)
+  {
+    if(Mode != KeybagMode.Kb3)
+    {
+      throw new InvalidOperationException(
+        "Expecting a keybag header as instance to call this method on");
+    }
+    if(historyHeader.Mode != KeybagMode.Kbx)
+    {
+      throw new InvalidOperationException(
+        "Expecting a history header as argument");
+    }
+    if(historyHeader.FileId != FileId)
+    {
+      throw new InvalidOperationException(
+        "History header ID does not match keybag header");
+    }
+    if(historyHeader.KeyId != KeyId)
+    {
+      throw new InvalidOperationException(
+        "History header Key ID does not match keybag header");
+    }
+
+  }
+
+  // ---
 }

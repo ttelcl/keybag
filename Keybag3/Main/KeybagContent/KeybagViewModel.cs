@@ -34,6 +34,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     MessageHub = new MessageHub();
     var fileName = owner.Model.PrimaryFile;
     RawKeybag = Keybag.FromFile(fileName);
+    RawHistory = new KeybagHistory(RawKeybag, fileName);
     ChunkPairs = new ChunkPairMap();
     ChunkPairs.InsertAll(RawKeybag.Chunks);
     EntrySpace = new ChunkSpace<EntryViewModel>();
@@ -289,6 +290,8 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
   }
 
   private Keybag RawKeybag { get; set; }
+
+  private KeybagHistory RawHistory { get; set; }
 
   private ChunkPairMap ChunkPairs { get; /*set;*/ }
 

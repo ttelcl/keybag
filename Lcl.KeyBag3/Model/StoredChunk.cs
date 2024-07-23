@@ -267,7 +267,11 @@ public class StoredChunk: IKeybagChunk
   /// <param name="writePrefix">
   /// If true: include the 4 byte chunk prefix
   /// </param>
-  public void WriteToFile(Stream file, bool writePrefix)
+  /// <param name="track">
+  /// If true (default): set <see cref="FileOffset"/> to the actual
+  /// file offset. If false: leave <see cref="FileOffset"/> unchanged.
+  /// </param>
+  public void WriteToFile(Stream file, bool writePrefix, bool track = true)
   {
     Span<byte> buffer = stackalloc byte[40 + (writePrefix ? 4 : 0)];
     var writer = new SpanWriter();
@@ -284,8 +288,24 @@ public class StoredChunk: IKeybagChunk
       .WriteByte(buffer, (byte)Kind)
       .WriteByte(buffer, (byte)Flags)
       .CheckFull(buffer);
-    FileOffset = file.Position;
+    if(track)
+    {
+      FileOffset = file.Position;
+    }
     file.Write(buffer);
     file.Write(Content);
   }
+
+  /// <summary>
+  /// Write this chunk to a history stream. Shorthand for
+  /// <c>WriteToFile(file, true, false);</c>
+  /// </summary>
+  /// <param name="file">
+  /// The *.kb3his file stream to write to
+  /// </param>
+  public void WriteToHistory(Stream file)
+  {
+    WriteToFile(file, true, false);
+  }
+
 }

@@ -139,9 +139,53 @@ public class StoredChunkMap
   public IReadOnlyList<StoredChunk> ChunkHistory(ChunkId nodeId)
   {
     var trail = FindTrail(nodeId);
-    return trail == null 
+    return trail == null
       ? Array.Empty<StoredChunk>()
       : trail;
+  }
+
+  /// <summary>
+  /// Return all history trails that have at least one entry chunk.
+  /// </summary>
+  public IEnumerable<IReadOnlyList<StoredChunk>> GetHistoryLists()
+  {
+    return _trails.Values.Where(list => list.Count > 0);
+  }
+
+  internal void RemoveAllHistory()
+  {
+    foreach(var trail in _trails.Values)
+    {
+      trail.RemoveRange(1, _trails.Count-1);
+    }
+    ChangeCounter++;
+  }
+
+  /// <summary>
+  /// Remove a chunk that is not current from the history trail
+  /// matching the given chunk reference.
+  /// </summary>
+  /// <param name="chunkReference">
+  /// The chunk reference to match
+  /// </param>
+  /// <returns>
+  /// True if a matching chunk was found (that was not the current
+  /// version of the chunk) and it was removed.
+  /// </returns>
+  public bool RemoveOldChunk(IKeybagChunk chunkReference)
+  {
+    var trail = FindTrail(chunkReference.NodeId);
+    if(trail != null)
+    {
+      var index = trail.FindIndex(n => n.EditId.Value == chunkReference.EditId.Value);
+      if(index >= 1) // 0 is the current version of the chunk, refuse to remove it
+      {
+        trail.RemoveAt(index);
+        ChangeCounter++;
+        return true;
+      }
+    }
+    return false;
   }
 
   /// <summary>
