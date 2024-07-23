@@ -288,6 +288,8 @@ public class SynchronizationViewModel: ViewModelBase
       MessageBoxButton.OK,
       MessageBoxImage.Warning);
     Stage = SynchronizationStage.Error;
+
+    // Reminder: don't forget to save history too!
   }
 
   private void ConnectExisting()
