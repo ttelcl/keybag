@@ -36,6 +36,14 @@ public class SynchronizationViewModel: ViewModelBase
     StepCommand = new DelegateCommand(
       p => { Step(); },
       p => StepEnabled);
+    ConnectExistingCommand = new DelegateCommand(
+      p => { ConnectExisting(); },
+      p => Stage == SynchronizationStage.NotStarted
+        || Stage == SynchronizationStage.Done);
+    ExportAsTargetCommand = new DelegateCommand(
+      p => { ExportAsTarget(); },
+      p => Stage == SynchronizationStage.NotStarted
+        || Stage == SynchronizationStage.Done);
   }
 
   public static bool TryPushOverlay(
@@ -80,6 +88,10 @@ public class SynchronizationViewModel: ViewModelBase
 
   public ICommand StepCommand { get; }
 
+  public ICommand ConnectExistingCommand { get; }
+
+  public ICommand ExportAsTargetCommand { get; }
+
   public KeybagViewModel Target { get; }
 
   public KeybagSetViewModel SetModel { get => Target.Owner; }
@@ -103,6 +115,8 @@ public class SynchronizationViewModel: ViewModelBase
       {
         RaisePropertyChanged(nameof(NextStepText));
         RaisePropertyChanged(nameof(StepEnabled));
+        RaisePropertyChanged(nameof(IsInhaled));
+        RaisePropertyChanged(nameof(InhaledCountColor));
       }
     }
   }
@@ -134,6 +148,15 @@ public class SynchronizationViewModel: ViewModelBase
       SynchronizationStage.Error => false,
       _ => false,
     };
+  }
+
+  public bool IsInhaled =>
+    Stage >= SynchronizationStage.Inhaled;
+
+  public string InhaledCountColor { 
+    get => SyncModel.PrimaryChangedChunkCount == 0
+      ? "LightGray"
+      : Stage > SynchronizationStage.Saving ? "OK" : "Changed";
   }
 
   public void Step()
@@ -267,6 +290,29 @@ public class SynchronizationViewModel: ViewModelBase
     Stage = SynchronizationStage.Error;
   }
 
+  private void ConnectExisting()
+  {
+    var result = MessageBox.Show(
+      "Connecting existing keybags is done from the main database view.\n" +
+      "Go there now?",
+      "Redirect",
+      MessageBoxButton.YesNo,
+      MessageBoxImage.Question);
+    if(result == MessageBoxResult.Yes)
+    {
+      PopMe();
+      DbModel.StartImport();
+    }
+  }
+
+  private void ExportAsTarget()
+  {
+    MessageBox.Show(
+      "Exporting keybags as new sync targets is not implemented yet",
+      "Under Development",
+      MessageBoxButton.OK,
+      MessageBoxImage.Warning);
+  }
 
   private void PushMe()
   {
