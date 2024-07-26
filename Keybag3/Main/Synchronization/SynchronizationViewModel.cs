@@ -122,7 +122,7 @@ public class SynchronizationViewModel: ViewModelBase
 
   public string NextStepText {
     get => Stage switch {
-      SynchronizationStage.NotStarted => "Start!",
+      SynchronizationStage.NotStarted => "Start Synchronizing!",
       SynchronizationStage.Loading => "(loading...)",
       SynchronizationStage.Loaded => "Inhale",
       SynchronizationStage.Inhaling => "(importing)",
@@ -307,14 +307,14 @@ public class SynchronizationViewModel: ViewModelBase
     }
     foreach(var target in SyncTargets)
     {
-      target.HasUnsavedChanges = target.Target.HasUnsaved();
-      if(target.HasUnsavedChanges)
+      target.HasUnsavedChanges = !target.IsReadOnly && target.Target.HasUnsaved();
+      if(target.HasUnsavedChanges && !target.IsReadOnly)
       {
         Trace.TraceInformation(
           $"Saving target {target.TargetFullFile}");
         target.Target.TrySave(key);
-        target.Refresh();
       }
+      target.Refresh();
     }
 
     CompleteStage(SynchronizationStage.Saving, SynchronizationStage.Done);

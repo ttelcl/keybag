@@ -191,6 +191,8 @@ public class KeybagSynchronizer
     {
       if(target.IsAvailable)
       {
+        // Exhale even if ReadOnly, to indicate that there would
+        // have been changes if the target was writable.
         target.Receive(Primary);
       }
     }

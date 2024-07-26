@@ -100,6 +100,11 @@ public class SyncKeybag
   public Keybag? TargetKeybag { get; private set; }
 
   /// <summary>
+  /// True if the target file exists and is flagged as read-only.
+  /// </summary>
+  public bool IsReadOnly { get; private set; }
+
+  /// <summary>
   /// The number of chunks this keybag file donated to the primary keybag.
   /// </summary>
   public int DonorChunkCount { get; private set; }
@@ -143,6 +148,10 @@ public class SyncKeybag
       IsAvailable = isAvailable;
       Error = error;
       TargetKeybag = targetKeybag;
+    }
+    if(targetKeybag != null)
+    {
+      IsReadOnly = new FileInfo(Target.Location).IsReadOnly;
     }
   }
 
@@ -237,7 +246,8 @@ public class SyncKeybag
   }
 
   /// <summary>
-  /// Insert chunks from the primary keybag into this sync target
+  /// Insert chunks from the primary keybag into this sync target.
+  /// Ignored if the target is read-only.
   /// </summary>
   /// <param name="primary">
   /// The primary keybag to receive from

@@ -44,6 +44,8 @@ public class SyncTargetViewModel: ViewModelBase
 
   public int RecipientChunkCount => Target.RecipientChunkCount;
 
+  public bool IsReadOnly => Target.IsReadOnly;
+
   public bool IsInhaled =>
     Target.IsAvailable && Owner.Stage >= SynchronizationStage.Inhaled;
 
@@ -75,17 +77,19 @@ public class SyncTargetViewModel: ViewModelBase
       {
         return "MidGray";
       }
-      if(Target.IsLoaded && Owner.Stage == SynchronizationStage.Saving)
-      {
-        // transient stage, so this may never really show.
-        return "Neutral";
-      }
       if(Target.IsLoaded && Owner.Stage >= SynchronizationStage.Exhaled)
       {
         // Also covers the "Done" stage - the HasUnsavedChanges
         // check above will take care of the Exhaled case where there
         // are unsaved changes.
-        return "OK";
+        if(DonorChunkCount == 0 && RecipientChunkCount == 0)
+        {
+          return "Neutral";
+        }
+        else
+        {
+          return "OK";
+        }
       }
       if(Target.IsLoaded)
       {
@@ -108,11 +112,6 @@ public class SyncTargetViewModel: ViewModelBase
       if(Owner.Stage == SynchronizationStage.NotStarted)
       {
         return "FileQuestionOutline";
-      }
-      if(Target.IsLoaded && Owner.Stage == SynchronizationStage.Saving)
-      {
-        // transient stage, so this may never really show.
-        return "FileOutline";
       }
       if(Target.IsLoaded && Owner.Stage >= SynchronizationStage.Exhaled)
       {
@@ -181,5 +180,6 @@ public class SyncTargetViewModel: ViewModelBase
     RaisePropertyChanged(nameof(FileNameColor));
     RaisePropertyChanged(nameof(ExhaleCountColor));
     RaisePropertyChanged(nameof(InhaleCountColor));
+    RaisePropertyChanged(nameof(IsReadOnly));
   }
 }
