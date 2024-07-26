@@ -387,6 +387,7 @@ public class KeybagSetViewModel:
         Title = "Export and Connect keybag",
         AddExtension = true,
         DefaultExt = ".kb3",
+        OverwritePrompt = false,
         CheckPathExists = true,
       };
       var result = dialog.ShowDialog();
@@ -397,15 +398,11 @@ public class KeybagSetViewModel:
         if(File.Exists(targetFile))
         {
           var confirm = MessageBox.Show(
-            $"The file '{targetFile}' already exists. \n" +
-            "Do you want to overwrite it?",
-            "Confirm",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-          if(confirm != MessageBoxResult.Yes)
-          {
-            return;
-          }
+            $"The target file '{targetFile}' already exists.",
+            "Error",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+          return;
         }
         File.Copy(Model.PrimaryFile, targetFile);
         Model.TryConnect(targetFile, out var kbr);
