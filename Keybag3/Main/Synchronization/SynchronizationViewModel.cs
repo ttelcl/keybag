@@ -25,8 +25,8 @@ public class SynchronizationViewModel: ViewModelBase
   private SynchronizationViewModel(
     KeybagViewModel target)
   {
-    Target = target;
-    SyncModel = Target.CreateSynchronizer();
+    SetModel = target.Owner;
+    SyncModel = target.CreateSynchronizer();
     SyncTargets = new ObservableCollection<SyncTargetViewModel>();
     foreach(var syncBag in SyncModel.Targets)
     {
@@ -92,9 +92,7 @@ public class SynchronizationViewModel: ViewModelBase
 
   public ICommand ExportAsTargetCommand { get; }
 
-  public KeybagViewModel Target { get; }
-
-  public KeybagSetViewModel SetModel { get => Target.Owner; }
+  public KeybagSetViewModel SetModel { get; }
 
   public KeybagDbViewModel DbModel { get => SetModel.Owner; }
 
@@ -153,7 +151,7 @@ public class SynchronizationViewModel: ViewModelBase
   public bool IsInhaled =>
     Stage >= SynchronizationStage.Inhaled;
 
-  public string InhaledCountColor { 
+  public string InhaledCountColor {
     get => SyncModel.PrimaryChangedChunkCount == 0
       ? "LightGray"
       : Stage > SynchronizationStage.Saving ? "OK" : "Changed";
@@ -282,14 +280,44 @@ public class SynchronizationViewModel: ViewModelBase
   private void Save()
   {
     StartStage(SynchronizationStage.Exhaled, SynchronizationStage.Saving);
-    MessageBox.Show(
-      "Saving the synchronization results is not implemented yet",
-      "Under Development",
-      MessageBoxButton.OK,
-      MessageBoxImage.Warning);
-    Stage = SynchronizationStage.Error;
+    var key = SetModel.FindKey();
+    if(key == null)
+    {
+      MessageBox.Show(
+        "Internal error - keybag is not unlocked",
+        "Internal error",
+        MessageBoxButton.OK,
+        MessageBoxImage.Error);
+      Stage = SynchronizationStage.Error;
+      return;
+    }
+    var primary = SyncModel.Primary;
+    if(primary.HasUnsavedChunks())
+    {
+      Trace.TraceInformation(
+        $"Saving primary {SetModel.Model.PrimaryFile}");
+      // We need to use a low-level save here, because "Target" is
+      // not kept updated during synchronization
+      primary.WriteFull(SetModel.Model.PrimaryFile, key, true);
+    }
+    else
+    {
+      Trace.TraceInformation(
+        $"No changes in primary {SetModel.Model.PrimaryFile}");
+    }
+    foreach(var target in SyncTargets)
+    {
+      target.HasUnsavedChanges = target.Target.HasUnsaved();
+      if(target.HasUnsavedChanges)
+      {
+        Trace.TraceInformation(
+          $"Saving target {target.TargetFullFile}");
+        target.Target.TrySave(key);
+        target.Refresh();
+      }
+    }
 
-    // Reminder: don't forget to save history too!
+    CompleteStage(SynchronizationStage.Saving, SynchronizationStage.Done);
   }
 
   private void ConnectExisting()
@@ -330,7 +358,7 @@ public class SynchronizationViewModel: ViewModelBase
       // so reload it just to be safe. This can only be safely
       // skipped if we didn't even get to the inhale phase and
       // there were no errors.
-      Target.Owner.Reload(true);
+      SetModel.Reload(true);
     }
     DbModel.AppModel.PopOverlay(this);
   }

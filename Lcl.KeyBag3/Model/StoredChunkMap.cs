@@ -160,13 +160,17 @@ public class StoredChunkMap
 
   internal void RemoveAllHistory()
   {
+    var removed = 0;
     foreach(var trail in _trails.Values)
     {
       if(trail.Count>1)
       {
+        removed += trail.Count-1;
         trail.RemoveRange(1, trail.Count-1);
       }
     }
+    Trace.TraceInformation(
+      $"Removed {removed} old versions of chunks from in-memory history");
     ChangeCounter++;
   }
 
@@ -207,6 +211,15 @@ public class StoredChunkMap
   /// </summary>
   public IEnumerable<StoredChunk> CurrentChunks {
     get => _trails.Values.Select(a => a[0]);
+  }
+
+  /// <summary>
+  /// Check if there are any current chunks that are "unsaved"
+  /// (i.e. have no file offset) in this <see cref="StoredChunkMap"/>
+  /// </summary>
+  public bool HasUnsaved()
+  {
+    return CurrentChunks.Any(c => c.FileOffset == null);
   }
 
   /// <summary>

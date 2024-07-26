@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -285,8 +286,41 @@ public class SyncKeybag
     {
       return false;
     }
-    return TargetKeybag!.Chunks.CurrentChunks.Any(c => c.FileOffset == null);
+    return TargetKeybag!.HasUnsavedChunks();
   }
+
+  /// <summary>
+  /// Try to save the target keybag. If the keybag is not available,
+  /// not in the right state, or has no changes, it is not saved.
+  /// If the target file exists but is flagged as readonly it is not saved
+  /// either.
+  /// </summary>
+  public void TrySave(
+    ChunkCryptor cryptor)
+  {
+    var status = GetStatus();
+    if(status.IsAvailable && status.IsLoaded && TargetKeybag != null)
+    {
+      if(TargetKeybag.HasUnsavedChunks())
+      {
+        var fileName = Target.Location;
+        var fileInfo = new FileInfo(fileName);
+        if(fileInfo.Exists && fileInfo.IsReadOnly)
+        {
+          Trace.TraceWarning(
+            $"Not overwriting 'read only' file '{fileName}'");
+          return;
+        }
+        Trace.TraceInformation(
+          $"Saving sync target {fileName}");
+        TargetKeybag.WriteFull(
+          fileName,
+          cryptor,
+          true);
+      }
+    }
+  }
+
 
   // --
 }

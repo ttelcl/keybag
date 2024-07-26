@@ -343,12 +343,21 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     return AllChunks.Max(c => c.EditId);
   }
 
+  /// <summary>
+  /// Update the "modified" flag for the normal editing use case.
+  /// Not valid for Synchronization!
+  /// </summary>
   public void UpdateHasUnsavedChunks()
   {
     HasUnsavedChunks = ChunkPairs.Chunks.Any(
       pair => pair.PersistChunk == null || !pair.PersistChunk.FileOffset.HasValue);
   }
 
+  /// <summary>
+  /// Check if there are any unsaved chunks in the keybag's chunk pairs.
+  /// Note that synchronization bypasses the chunk pairs completely,
+  /// so it is NOT valid for that use case
+  /// </summary>
   public bool HasUnsavedChunks {
     get => _hasUnsavedChunks;
     private set {

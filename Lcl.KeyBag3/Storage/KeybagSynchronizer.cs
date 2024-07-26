@@ -106,7 +106,8 @@ public class KeybagSynchronizer
   }
 
   /// <summary>
-  /// The loaded primary keybag in the set
+  /// The loaded primary keybag in the set. Synchronization updates
+  /// this (but does not update the viewmodel used during normal use).
   /// </summary>
   public Keybag Primary { get; }
 

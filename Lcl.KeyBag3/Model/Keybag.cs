@@ -82,6 +82,16 @@ public class Keybag
   public StoredChunkMap Chunks { get; }
 
   /// <summary>
+  /// Check if there are any chunks in this <see cref="Keybag"/>'s
+  /// <see cref="Chunks"/> list that are unsaved (i.e. have 
+  /// no <see cref="StoredChunk.FileOffset"/> set)
+  /// </summary>
+  public bool HasUnsavedChunks()
+  {
+    return Chunks.HasUnsaved();
+  }
+
+  /// <summary>
   /// The file header node
   /// </summary>
   public StoredChunk FileChunk { get => Header.FileChunk; }

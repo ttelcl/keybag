@@ -51,6 +51,7 @@
                         Orientation="Horizontal" DockPanel.Dock="Right"
                         VerticalAlignment="Center"
                         ToolTip="Number of elements exported to this target"
+                        ToolTipService.Placement="Left"
                         Visibility="{Binding IsExhaled, Converter={StaticResource VisibleIf}}"
                         Margin="10,0">
                         <iconPacks:PackIconMaterial
@@ -67,6 +68,7 @@
                         Visibility="{Binding IsInhaled, Converter={StaticResource VisibleIf}}"
                         VerticalAlignment="Center"
                         ToolTip="Number of elements imported from this target"
+                        ToolTipService.Placement="Left"
                         Margin="10,0">
                         <iconPacks:PackIconMaterial
                             Foreground="{Binding InhaleCountColor, Converter={StaticResource Kb3Fore}}"
@@ -140,7 +142,8 @@
                                 VerticalAlignment="Center"
                                 Visibility="{Binding IsInhaled, Converter={StaticResource VisibleIf}}"
                                 ToolTip="Number of elements imported from the synchronization targets"
-                                Margin="10,0,30,0">
+                                ToolTipService.Placement="Left"
+                                Margin="10,0,96,0">
                                 <TextBlock
                                     Padding="5,0"
                                     VerticalAlignment="Center"
