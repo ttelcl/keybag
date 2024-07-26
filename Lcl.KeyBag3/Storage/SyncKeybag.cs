@@ -55,10 +55,8 @@ public class SyncKeybag
   /// Create a new SyncKeybag
   /// </summary>
   public SyncKeybag(
-    KeybagSet host,
     KeybagReference target)
   {
-    Host = host;
     Target = target;
     IsAvailable = target.IsAvailable();
     DonorChunkCount = 0;
@@ -68,11 +66,6 @@ public class SyncKeybag
       Error = "Target file not available";
     }
   }
-
-  /// <summary>
-  /// The host keybag set that contains this sync target.
-  /// </summary>
-  public KeybagSet Host { get; }
 
   /// <summary>
   /// Identifies the target keybag file.

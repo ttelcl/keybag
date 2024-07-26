@@ -91,12 +91,11 @@ public class KeybagSynchronizer
     KeybagSet kbs,
     Keybag primary)
   {
-    KbSet = kbs;
     Primary = primary;
     _targets = new List<SyncKeybag>();
     foreach(var target in kbs.SyncFiles)
     {
-      _targets.Add(new SyncKeybag(kbs, target));
+      _targets.Add(new SyncKeybag(target));
     }
     _targets.Sort((kbg1, kbg2) =>
       String.Compare(
@@ -105,11 +104,6 @@ public class KeybagSynchronizer
         StringComparison.InvariantCultureIgnoreCase));
     Targets = _targets.AsReadOnly();
   }
-
-  /// <summary>
-  /// The keybag set to synchronize
-  /// </summary>
-  public KeybagSet KbSet { get; }
 
   /// <summary>
   /// The loaded primary keybag in the set

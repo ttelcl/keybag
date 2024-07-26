@@ -113,15 +113,21 @@ public class KeybagHistory
       {
         foreach(var chunk in chunkList.Skip(1))
         {
-          if(chunk.EditId.Value < maximumEdit.Value)
+          var longId = chunk.LongId();
+          if(!_knownChunks.ContainsKey(longId))
           {
-            var longId = chunk.LongId();
-            if(!_knownChunks.ContainsKey(longId))
+            if(chunk.EditId.Value < maximumEdit.Value)
             {
               _knownChunks[longId] = chunk.ToStub();
               // Remember that WriteToHistory does not modify the chunk,
               // so there is no need to Clone() it.
               chunk.WriteToHistory(fs);
+            }
+            else
+            {
+              Trace.TraceWarning(
+                $"Not saving chunk {chunk.NodeId}:{chunk.EditId.ToStampText()} to "+
+                "history because it is too new");
             }
           }
         }

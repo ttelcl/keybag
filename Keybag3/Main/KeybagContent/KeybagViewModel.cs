@@ -321,9 +321,26 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     }
   }
 
+  /// <summary>
+  /// Enumerate all stored chunks in the chunk pair storage
+  /// (but not seal chunks).
+  /// </summary>
+  public IEnumerable<StoredChunk> AllChunks {
+    get {
+      foreach(var pair in ChunkPairs.Chunks)
+      {
+        var storedChunk = pair.PersistChunk;
+        if(storedChunk != null)
+        {
+          yield return storedChunk;
+        }
+      }
+    }
+  }
+
   public ChunkId GetNewestChunkEdit()
   {
-    return AllRawChunks.Max(c => c.EditId);
+    return AllChunks.Max(c => c.EditId);
   }
 
   public void UpdateHasUnsavedChunks()
@@ -375,14 +392,14 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     }
     /*
      * At this point this viewmodel has not been synced to RawKeybag yet!
-     * So let's do that first.
+     * So let's do that first. make sure NOT to include seal chunks
      */
-    foreach(var chunk in AllRawChunks)
+    foreach(var chunk in AllChunks)
     {
       RawKeybag.Chunks.PutChunk(chunk);
     }
     var primaryFile = Owner.Model.PrimaryFile;
-    RawKeybag.WriteFull(primaryFile, key);
+    RawKeybag.WriteFull(primaryFile, key, RawHistory);
     UpdateHasUnsavedChunks();
     if(HasUnsavedChunks)
     {

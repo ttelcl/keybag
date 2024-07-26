@@ -122,7 +122,7 @@ public class KeybagDb
       []);
     var kbs = new KeybagSet(this, descriptor);
     var kbf = new Keybag(kbh);
-    kbf.WriteFull(kbs.PrimaryFile, cryptor);
+    kbf.WriteFull(kbs.PrimaryFile, cryptor, true);
     Put(kbs);
     return kbs;
   }

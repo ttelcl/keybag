@@ -78,16 +78,22 @@ public class StoredChunkMap
       }
     }
     var trail = GetTrail(chunk.NodeId);
-    var index = trail.FindIndex(n => n.EditId.Value < chunk.EditId.Value);
-    if(index < 0)
+    int index = 0;
+    // Find insertion location, preserving descending sort order on EditId
+    while(index < trail.Count)
     {
-      index = trail.Count;
-    }
-    else if(trail[index].EditId.Value == chunk.EditId.Value)
-    {
-      // node is already present (assuming an EditId uniquely identifies
-      // the node for all time and nodes are immutable)
-      return false;
+      if(trail[index].EditId.Value < chunk.EditId.Value)
+      {
+        // to be inserted here.
+        break;
+      }
+      if(trail[index].EditId.Value == chunk.EditId.Value)
+      {
+        // node is already present (assuming an EditId uniquely identifies
+        // the node for all time and nodes are immutable)
+        return false;
+      }
+      index++;
     }
     if(chunk.Kind == ChunkKind.File)
     {
@@ -156,7 +162,10 @@ public class StoredChunkMap
   {
     foreach(var trail in _trails.Values)
     {
-      trail.RemoveRange(1, _trails.Count-1);
+      if(trail.Count>1)
+      {
+        trail.RemoveRange(1, trail.Count-1);
+      }
     }
     ChangeCounter++;
   }
