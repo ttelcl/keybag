@@ -179,6 +179,8 @@
                         <Button
                             DockPanel.Dock="Left"
                             Padding="5,3" Margin="5,0"
+                            MinWidth="200"
+                            IsEnabled="{Binding StepEnabled}"
                             Command="{Binding StepCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <iconPacks:PackIconMaterial

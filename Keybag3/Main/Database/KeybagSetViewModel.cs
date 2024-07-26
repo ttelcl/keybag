@@ -63,7 +63,9 @@ public class KeybagSetViewModel:
       p => {
         if(KeybagModel!= null)
         {
-          SynchronizationViewModel.TryPushOverlay(KeybagModel);
+          SynchronizationViewModel.TryPushOverlay(
+            KeybagModel,
+            EnableAutoSync);
         }
       },
       p => KeybagModel!= null
@@ -133,6 +135,16 @@ public class KeybagSetViewModel:
       && KeybagModel.Decoded
       && KeybagModel.HasUnsavedChunks;
   }
+
+  public bool EnableAutoSync {
+    get => _enableAutoSync;
+    set {
+      if(SetValueProperty(ref _enableAutoSync, value))
+      {
+      }
+    }
+  }
+  private bool _enableAutoSync = true;
 
   /// <summary>
   /// Save pending changes if there were any.

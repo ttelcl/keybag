@@ -14,11 +14,13 @@ using Lcl.KeyBag3.Model;
 using Lcl.KeyBag3.Storage;
 
 using Keybag3.WpfUtilities;
+using System.Windows.Threading;
 
 namespace Keybag3.Main.Synchronization;
 
 public class SyncTargetViewModel: ViewModelBase
 {
+
   public SyncTargetViewModel(
     SynchronizationViewModel owner,
     SyncKeybag target)

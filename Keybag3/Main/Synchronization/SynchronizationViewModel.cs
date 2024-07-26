@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 using Lcl.KeyBag3.Storage;
 
@@ -22,9 +23,18 @@ namespace Keybag3.Main.Synchronization;
 
 public class SynchronizationViewModel: ViewModelBase
 {
+  private DispatcherTimer _timer;
+
   private SynchronizationViewModel(
     KeybagViewModel target)
   {
+    _timer = new DispatcherTimer() {
+      Interval = TimeSpan.FromMilliseconds(250),
+      IsEnabled = false, // Start out stopped!
+    };
+    _timer.Tick += (s, e) => {
+      Step();
+    };
     SetModel = target.Owner;
     SyncModel = target.CreateSynchronizer();
     SyncTargets = new ObservableCollection<SyncTargetViewModel>();
@@ -47,7 +57,8 @@ public class SynchronizationViewModel: ViewModelBase
   }
 
   public static bool TryPushOverlay(
-    KeybagViewModel target)
+    KeybagViewModel target,
+    bool enableAutoStep)
   {
     if(!target.Decoded)
     {
@@ -81,8 +92,11 @@ public class SynchronizationViewModel: ViewModelBase
 
     var syncModel = new SynchronizationViewModel(target);
     syncModel.PushMe();
+    syncModel.EnableAutoStepping = enableAutoStep;
     return true;
   }
+
+  public bool EnableAutoStepping { get; set; }
 
   public ICommand DoneCommand { get; }
 
@@ -113,6 +127,7 @@ public class SynchronizationViewModel: ViewModelBase
       {
         RaisePropertyChanged(nameof(NextStepText));
         RaisePropertyChanged(nameof(StepEnabled));
+        RaisePropertyChanged(nameof(StepCommand));
         RaisePropertyChanged(nameof(IsInhaled));
         RaisePropertyChanged(nameof(InhaledCountColor));
       }
@@ -122,7 +137,7 @@ public class SynchronizationViewModel: ViewModelBase
 
   public string NextStepText {
     get => Stage switch {
-      SynchronizationStage.NotStarted => "Start Synchronizing!",
+      SynchronizationStage.NotStarted => "Synchronize!",
       SynchronizationStage.Loading => "(loading...)",
       SynchronizationStage.Loaded => "Inhale",
       SynchronizationStage.Inhaling => "(importing)",
@@ -159,6 +174,7 @@ public class SynchronizationViewModel: ViewModelBase
 
   public void Step()
   {
+    _timer.IsEnabled = false;
     try
     {
       Mouse.OverrideCursor = Cursors.Wait;
@@ -197,6 +213,12 @@ public class SynchronizationViewModel: ViewModelBase
     finally
     {
       Mouse.OverrideCursor = null;
+    }
+    if(EnableAutoStepping 
+      && Stage != SynchronizationStage.Done
+      && Stage != SynchronizationStage.Error)
+    {
+      _timer.IsEnabled = true;
     }
   }
 
