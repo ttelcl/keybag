@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
+using Microsoft.Win32;
+
 using Lcl.KeyBag3.Storage;
 using Lcl.KeyBag3.Crypto;
 using Lcl.KeyBag3.Model;
@@ -370,6 +372,46 @@ public class KeybagSetViewModel:
 
   public string ShowIcon {
     get => ShowingContent ? "EyeOff" : "Eye";
+  }
+
+  public void ExportKeybag()
+  {
+    var key = FindKey();
+    if(key != null && KeybagModel != null)
+    {
+      // Check KeybagModel just to be sure the keybag exists
+      // and is valid and unlocked.
+      var dialog = new SaveFileDialog() {
+        Filter = "Keybag 3 files|*.kb3",
+        FileName = $"{Tag}.kb3",
+        Title = "Export and Connect keybag",
+        AddExtension = true,
+        DefaultExt = ".kb3",
+        CheckPathExists = true,
+      };
+      var result = dialog.ShowDialog();
+      if(result == true)
+      {
+        var targetFile = dialog.FileName;
+        Trace.TraceInformation($"Exporting keybag to '{targetFile}'");
+        if(File.Exists(targetFile))
+        {
+          var confirm = MessageBox.Show(
+            $"The file '{targetFile}' already exists. \n" +
+            "Do you want to overwrite it?",
+            "Confirm",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+          if(confirm != MessageBoxResult.Yes)
+          {
+            return;
+          }
+        }
+        File.Copy(Model.PrimaryFile, targetFile);
+        Model.TryConnect(targetFile, out var kbr);
+        Refresh();
+      }
+    }
   }
 
   private void Eject()

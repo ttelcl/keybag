@@ -18,8 +18,22 @@
         <DataTemplate DataType="{x:Type local:SyncTargetViewModel}">
             <Border
                 BorderThickness="1"
-                Padding="5"
+                Padding="5" Background="#282828" Margin="0,1"
                 BorderBrush="{DynamicResource MahApps.Brushes.Accent2}">
+                <Border.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem
+                            Header="Disconnect"
+                            Command="{Binding DisconnectCommand}">
+                            <MenuItem.Icon>
+                                <iconPacks:PackIconMaterial
+                                    Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"
+                                    Kind="Connection" Padding="2,0"
+                                    Height="20" Width="20" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </Border.ContextMenu>
                 <DockPanel>
                     <iconPacks:PackIconMaterial
                         Kind="{Binding FileIcon}"
@@ -59,7 +73,7 @@
                                 Foreground="{Binding ExhaleCountColor, Converter={StaticResource Kb3Fore}}"
                                 Kind="ArrowRightBold" Width="20" Height="20"/>
                             <iconPacks:PackIconMaterial
-                                Foreground="#FFCC00"
+                                Foreground="#FFCC00" Background="#33999999"
                                 ToolTip="This target is read-only"
                                 ToolTipService.Placement="Left"
                                 Visibility="{Binding IsReadOnly, Converter={StaticResource VisibleIf}}"
@@ -179,19 +193,37 @@
                         <Button
                             DockPanel.Dock="Left"
                             Padding="5,3" Margin="5,0"
-                            MinWidth="200"
+                            MinWidth="140"
                             IsEnabled="{Binding StepEnabled}"
                             Command="{Binding StepCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <iconPacks:PackIconMaterial
                                     Kind="SwapHorizontalBold"
                                     Padding="2,0" Height="24" Width="24" />
-                                <TextBlock FontSize="14" Padding="2,2"
-                                           Text="Next Step: "/>
+                                <!--<TextBlock FontSize="14" Padding="2,2"
+                                           Text="Next Step: "/>-->
                                 <TextBlock FontSize="14" Padding="2,2"
                                            Text="{Binding NextStepText}"/>
                             </StackPanel>
                         </Button>
+                        <DockPanel
+                            DockPanel.Dock="Left"
+                            Visibility="{Binding HasTargets, Converter={StaticResource VisibleIfNot}}"
+                            VerticalAlignment="Center">
+                            <iconPacks:PackIconMaterial
+                                Kind="AlertOutline" Margin="10,0,10,0"
+                                Foreground="{Binding Source=Warning, Converter={StaticResource Kb3Fore}}"
+                                Padding="0,0" Height="28" Width="28" />
+                            <StackPanel>
+                                <TextBlock
+                                    FontSize="12" Padding="2,0" TextWrapping="Wrap"
+                                    Foreground="{Binding Source=Warning, Converter={StaticResource Kb3Fore}}">
+                                    There are no synchronization targets for this keybag. To get
+                                    started, export this keybag as a new target file (for example
+                                    to a folder synchronized to your favourite cloud storage provider)
+                                </TextBlock>
+                            </StackPanel>
+                        </DockPanel>
                         <StackPanel/>
                     </DockPanel>
                     <!-- List of Targets and add buttons -->

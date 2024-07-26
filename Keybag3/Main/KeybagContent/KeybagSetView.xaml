@@ -108,23 +108,6 @@
                             Text="Discard ..."/>
                     </StackPanel>
                 </Button>
-                <!--<Button Padding="5,3" Margin="5,2" DockPanel.Dock="Right"
-                        MinWidth="80" Command="{Binding EjectCommand}"
-                        ToolTip="Close this keybag and forget the key"
-                        Visibility="{Binding KeyKnown,
-                            Converter={StaticResource VisibleIfString},
-                            ConverterParameter=True}"
-                        ToolTipService.ShowOnDisabled="True">
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial
-                            Kind="Eject" Padding="2,0"
-                            Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"
-                            Height="20" Width="20" />
-                        <TextBlock
-                            Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"
-                            FontSize="14" Padding="5,2,2,2" Text="Unload"/>
-                    </StackPanel>
-                </Button>-->
                 <!-- Hamburger menu -->
                 <Button
                     Padding="5,3" Margin="5,2" DockPanel.Dock="Right"

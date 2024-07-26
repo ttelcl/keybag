@@ -340,7 +340,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
 
   public ChunkId GetNewestChunkEdit()
   {
-    return AllChunks.Max(c => c.EditId);
+    return AllChunks.MaxBy(c => c.EditId.Value)!.EditId;
   }
 
   /// <summary>

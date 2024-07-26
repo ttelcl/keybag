@@ -4,17 +4,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Diagnostics;
+using System.Windows.Input;
+using System.Windows.Threading;
 
 using Lcl.KeyBag3.Model;
 using Lcl.KeyBag3.Storage;
 
 using Keybag3.WpfUtilities;
-using System.Windows.Threading;
 
 namespace Keybag3.Main.Synchronization;
 
@@ -28,7 +29,11 @@ public class SyncTargetViewModel: ViewModelBase
     Owner = owner;
     Target = target;
     TargetFullFile = target.Target.Location;
+    DisconnectCommand = new DelegateCommand(
+      p => { Owner.Disconnect(this); });
   }
+
+  public ICommand DisconnectCommand { get; }
 
   public SynchronizationViewModel Owner { get; }
 
@@ -184,4 +189,6 @@ public class SyncTargetViewModel: ViewModelBase
     RaisePropertyChanged(nameof(InhaleCountColor));
     RaisePropertyChanged(nameof(IsReadOnly));
   }
+
+  //--
 }

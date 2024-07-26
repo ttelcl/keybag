@@ -394,6 +394,19 @@ public class KeybagSet
   }
 
   /// <summary>
+  /// Try to disconnect the given file from this set
+  /// </summary>
+  public bool TryDisconnect(KeybagReference target)
+  {
+    if(_syncTargetMap.Remove(target.Location))
+    {
+      Save();
+      return true;
+    }
+    return false;
+  }
+
+  /// <summary>
   /// Export this set to a new synchronization file
   /// </summary>
   /// <param name="kb3file">

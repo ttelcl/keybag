@@ -24,10 +24,12 @@ namespace Keybag3.Main.Synchronization;
 public class SynchronizationViewModel: ViewModelBase
 {
   private DispatcherTimer _timer;
+  private KeybagViewModel _target;
 
   private SynchronizationViewModel(
     KeybagViewModel target)
   {
+    _target = target;
     _timer = new DispatcherTimer() {
       Interval = TimeSpan.FromMilliseconds(250),
       IsEnabled = false, // Start out stopped!
@@ -36,8 +38,8 @@ public class SynchronizationViewModel: ViewModelBase
       Step();
     };
     SetModel = target.Owner;
-    SyncModel = target.CreateSynchronizer();
     SyncTargets = new ObservableCollection<SyncTargetViewModel>();
+    SyncModel = target.CreateSynchronizer();
     foreach(var syncBag in SyncModel.Targets)
     {
       SyncTargets.Add(new SyncTargetViewModel(this, syncBag));
@@ -54,6 +56,17 @@ public class SynchronizationViewModel: ViewModelBase
       p => { ExportAsTarget(); },
       p => Stage == SynchronizationStage.NotStarted
         || Stage == SynchronizationStage.Done);
+  }
+
+  public void Reinitialize()
+  {
+    Stage = SynchronizationStage.NotStarted;
+    SyncModel = _target.CreateSynchronizer();
+    SyncTargets.Clear();
+    foreach(var syncBag in SyncModel.Targets)
+    {
+      SyncTargets.Add(new SyncTargetViewModel(this, syncBag));
+    }
   }
 
   public static bool TryPushOverlay(
@@ -110,7 +123,7 @@ public class SynchronizationViewModel: ViewModelBase
 
   public KeybagDbViewModel DbModel { get => SetModel.Owner; }
 
-  public KeybagSynchronizer SyncModel { get; }
+  public KeybagSynchronizer SyncModel { get; private set; }
 
   public ObservableCollection<SyncTargetViewModel> SyncTargets { get; }
 
@@ -152,15 +165,20 @@ public class SynchronizationViewModel: ViewModelBase
   }
 
   public bool StepEnabled {
-    get => Stage switch {
-      SynchronizationStage.NotStarted => true,
-      SynchronizationStage.Loaded => true,
-      SynchronizationStage.Inhaled => true,
-      SynchronizationStage.Exhaled => true,
-      SynchronizationStage.Done => false,
-      SynchronizationStage.Error => false,
-      _ => false,
-    };
+    get => SyncTargets.Count > 0
+        && (Stage switch {
+          SynchronizationStage.NotStarted => true,
+          SynchronizationStage.Loaded => true,
+          SynchronizationStage.Inhaled => true,
+          SynchronizationStage.Exhaled => true,
+          SynchronizationStage.Done => false,
+          SynchronizationStage.Error => false,
+          _ => false,
+        });
+  }
+
+  public bool HasTargets {
+    get => SyncTargets.Count > 0;
   }
 
   public bool IsInhaled =>
@@ -214,7 +232,7 @@ public class SynchronizationViewModel: ViewModelBase
     {
       Mouse.OverrideCursor = null;
     }
-    if(EnableAutoStepping 
+    if(EnableAutoStepping
       && Stage != SynchronizationStage.Done
       && Stage != SynchronizationStage.Error)
     {
@@ -359,11 +377,31 @@ public class SynchronizationViewModel: ViewModelBase
 
   private void ExportAsTarget()
   {
-    MessageBox.Show(
-      "Exporting keybags as new sync targets is not implemented yet",
-      "Under Development",
-      MessageBoxButton.OK,
-      MessageBoxImage.Warning);
+    SetModel.ExportKeybag();
+    Reinitialize();
+    RaisePropertyChanged(nameof(HasTargets));
+  }
+
+  public void Disconnect(SyncTargetViewModel stvm)
+  {
+    var result = MessageBox.Show(
+      $"Are you sure you want to stop synchronizing\n"+
+      $"{stvm.Target.Target.Location}\nwith this keybag?",
+      "Confirm",
+      MessageBoxButton.YesNo,
+      MessageBoxImage.Question);
+    if(result == MessageBoxResult.Yes)
+    {
+      if(SetModel.Model.TryDisconnect(stvm.Target.Target))
+      {
+        Reinitialize();
+        RaisePropertyChanged(nameof(HasTargets));
+      }
+      else
+      {
+        Trace.TraceError($"Failed to disconnect {stvm.Target.Target.Location}.");
+      }
+    }
   }
 
   private void PushMe()
