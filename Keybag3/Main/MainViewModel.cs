@@ -30,7 +30,16 @@ public class MainViewModel:
     _overlayStack = new Stack<ViewModelBase>();
     Services = services;
     DbViewModel = new KeybagDbViewModel(this);
-    CurrentView = DbViewModel;
+    if(DbViewModel.DefaultKeybag == null)
+    {
+      CurrentView = DbViewModel;
+    }
+    else
+    {
+      // Auto-open the default keybag if defined
+      CurrentView = DbViewModel.DefaultKeybag;
+      DbViewModel.DefaultKeybag.ViewThisSet();
+    }
 
     ResetViewCommand = new DelegateCommand(p => {
       CurrentView = DbViewModel; 

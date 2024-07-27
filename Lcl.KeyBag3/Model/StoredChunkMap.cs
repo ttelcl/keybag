@@ -78,16 +78,22 @@ public class StoredChunkMap
       }
     }
     var trail = GetTrail(chunk.NodeId);
-    var index = trail.FindIndex(n => n.EditId.Value < chunk.EditId.Value);
-    if(index < 0)
+    int index = 0;
+    // Find insertion location, preserving descending sort order on EditId
+    while(index < trail.Count)
     {
-      index = trail.Count;
-    }
-    else if(trail[index].EditId.Value == chunk.EditId.Value)
-    {
-      // node is already present (assuming an EditId uniquely identifies
-      // the node for all time and nodes are immutable)
-      return false;
+      if(trail[index].EditId.Value < chunk.EditId.Value)
+      {
+        // to be inserted here.
+        break;
+      }
+      if(trail[index].EditId.Value == chunk.EditId.Value)
+      {
+        // node is already present (assuming an EditId uniquely identifies
+        // the node for all time and nodes are immutable)
+        return false;
+      }
+      index++;
     }
     if(chunk.Kind == ChunkKind.File)
     {
@@ -139,9 +145,60 @@ public class StoredChunkMap
   public IReadOnlyList<StoredChunk> ChunkHistory(ChunkId nodeId)
   {
     var trail = FindTrail(nodeId);
-    return trail == null 
+    return trail == null
       ? Array.Empty<StoredChunk>()
       : trail;
+  }
+
+  /// <summary>
+  /// Return all history trails that have at least one entry chunk.
+  /// </summary>
+  public IEnumerable<IReadOnlyList<StoredChunk>> GetHistoryLists()
+  {
+    return _trails.Values.Where(list => list.Count > 0);
+  }
+
+  internal void RemoveAllHistory()
+  {
+    var removed = 0;
+    foreach(var trail in _trails.Values)
+    {
+      if(trail.Count>1)
+      {
+        removed += trail.Count-1;
+        trail.RemoveRange(1, trail.Count-1);
+      }
+    }
+    Trace.TraceInformation(
+      $"Removed {removed} old versions of chunks from in-memory history");
+    ChangeCounter++;
+  }
+
+  /// <summary>
+  /// Remove a chunk that is not current from the history trail
+  /// matching the given chunk reference.
+  /// </summary>
+  /// <param name="chunkReference">
+  /// The chunk reference to match
+  /// </param>
+  /// <returns>
+  /// True if a matching chunk was found (that was not the current
+  /// version of the chunk) and it was removed.
+  /// </returns>
+  public bool RemoveOldChunk(IKeybagChunk chunkReference)
+  {
+    var trail = FindTrail(chunkReference.NodeId);
+    if(trail != null)
+    {
+      var index = trail.FindIndex(n => n.EditId.Value == chunkReference.EditId.Value);
+      if(index >= 1) // 0 is the current version of the chunk, refuse to remove it
+      {
+        trail.RemoveAt(index);
+        ChangeCounter++;
+        return true;
+      }
+    }
+    return false;
   }
 
   /// <summary>
@@ -154,6 +211,15 @@ public class StoredChunkMap
   /// </summary>
   public IEnumerable<StoredChunk> CurrentChunks {
     get => _trails.Values.Select(a => a[0]);
+  }
+
+  /// <summary>
+  /// Check if there are any current chunks that are "unsaved"
+  /// (i.e. have no file offset) in this <see cref="StoredChunkMap"/>
+  /// </summary>
+  public bool HasUnsaved()
+  {
+    return CurrentChunks.Any(c => c.FileOffset == null);
   }
 
   /// <summary>

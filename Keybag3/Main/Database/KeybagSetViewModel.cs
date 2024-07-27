@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
+using Microsoft.Win32;
+
 using Lcl.KeyBag3.Storage;
 using Lcl.KeyBag3.Crypto;
 using Lcl.KeyBag3.Model;
@@ -63,7 +65,9 @@ public class KeybagSetViewModel:
       p => {
         if(KeybagModel!= null)
         {
-          SynchronizationViewModel.TryPushOverlay(KeybagModel);
+          SynchronizationViewModel.TryPushOverlay(
+            KeybagModel,
+            EnableAutoSync);
         }
       },
       p => KeybagModel!= null
@@ -71,9 +75,17 @@ public class KeybagSetViewModel:
         && !KeybagModel.HasUnsavedChunks);
     DiscardCommand = new DelegateCommand(
       p => { Discard(); },
-      p => KeybagModel != null
+      p => KeyKnownAndShowing
+        && KeybagModel != null
         && KeybagModel.Decoded
         && KeybagModel.HasUnsavedChunks);
+    EjectCommand = new DelegateCommand(
+      p => { Eject(); },
+      p => KeyKnown
+        && KeybagModel != null
+        && !KeybagModel.HasUnsavedChunks);
+    ToggleDefaultCommand = new DelegateCommand(
+      p => { ToggleDefault(); });
     Refresh();
   }
 
@@ -96,6 +108,10 @@ public class KeybagSetViewModel:
   public ICommand DiscardCommand { get; }
 
   public ICommand ShowSyncOverlayCommand { get; }
+
+  public ICommand EjectCommand { get; }
+
+  public ICommand ToggleDefaultCommand { get; }
 
   private void BackToDatabase()
   {
@@ -126,19 +142,30 @@ public class KeybagSetViewModel:
       && KeybagModel.HasUnsavedChunks;
   }
 
+  public bool EnableAutoSync {
+    get => _enableAutoSync;
+    set {
+      if(SetValueProperty(ref _enableAutoSync, value))
+      {
+      }
+    }
+  }
+  private bool _enableAutoSync = true;
+
   /// <summary>
   /// Save pending changes if there were any.
   /// For use by the app when the user is closing the app.
   /// </summary>
   public void Save()
   {
+    // This is NOT the normal save, but only used at app shutdown
     if(SavePending)
     {
       KeybagModel?.Save();
     }
   }
 
-  private void ViewThisSet()
+  public void ViewThisSet()
   {
     ShowingContent = true; // includes InitKeybagModel
     Owner.AppModel.CurrentView = this;
@@ -191,6 +218,7 @@ public class KeybagSetViewModel:
     set {
       if(SetValueProperty(ref _editId, value))
       {
+        RaisePropertyChanged(nameof(LastChanged));
         if(Owner.SortOrder == KeybagSortOrder.ByLastModified)
         {
           Owner.SortKeybags();
@@ -242,8 +270,15 @@ public class KeybagSetViewModel:
             keyDescriptor,
             Tag,
             success => {
-              Refresh();
-              InitKeybagModel();
+              if(success)
+              {
+                Refresh();
+                InitKeybagModel();
+              }
+              else
+              {
+                Owner.AppModel.CurrentView = Owner;
+              }
             })
         );
         return true;
@@ -350,5 +385,86 @@ public class KeybagSetViewModel:
 
   public string ShowIcon {
     get => ShowingContent ? "EyeOff" : "Eye";
+  }
+
+  public void ExportKeybag()
+  {
+    var key = FindKey();
+    if(key != null && KeybagModel != null)
+    {
+      // Check KeybagModel just to be sure the keybag exists
+      // and is valid and unlocked.
+      var dialog = new SaveFileDialog() {
+        Filter = "Keybag 3 files|*.kb3",
+        FileName = $"{Tag}.kb3",
+        Title = "Export and Connect keybag",
+        AddExtension = true,
+        DefaultExt = ".kb3",
+        OverwritePrompt = false,
+        CheckPathExists = true,
+      };
+      var result = dialog.ShowDialog();
+      if(result == true)
+      {
+        var targetFile = dialog.FileName;
+        Trace.TraceInformation($"Exporting keybag to '{targetFile}'");
+        if(File.Exists(targetFile))
+        {
+          var confirm = MessageBox.Show(
+            $"The target file '{targetFile}' already exists.",
+            "Error",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+          return;
+        }
+        File.Copy(Model.PrimaryFile, targetFile);
+        Model.TryConnect(targetFile, out var kbr);
+        Refresh();
+      }
+    }
+  }
+
+  public bool IsDefault {
+    get => _isDefault;
+    internal set {
+      // Only to be called from KeybagDbViewModel.DefaultKeybag::set,
+      // not directly
+      if(SetValueProperty(ref _isDefault, value))
+      {
+        RaisePropertyChanged(nameof(ToggleDefaultIcon));
+      }
+    }
+  }
+  private bool _isDefault;
+
+  public void ToggleDefault()
+  {
+    if(Owner.DefaultKeybagId == Id26)
+    {
+      Owner.SetDefaultKeybag(null);
+    }
+    else
+    {
+      Owner.SetDefaultKeybag(this);
+    }
+  }
+
+  public string ToggleDefaultIcon {
+    get => IsDefault ? "StarOutline" : "Star";
+  }
+
+  private void Eject()
+  {
+    KeybagModel = null;
+    var keyRing = Owner.AppModel.Services.KeyRing;
+    keyRing.Remove(Model.KeyGuid);
+    KeyKnown = false;
+    if(ShowingContent)
+    {
+      RaisePropertyChanged(nameof(ShowingContent));
+      RaisePropertyChanged(nameof(ShowText));
+      RaisePropertyChanged(nameof(ShowIcon));
+    }
+    Owner.AppModel.CurrentView = Owner;
   }
 }

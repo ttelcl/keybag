@@ -133,5 +133,26 @@ public static class KeybagChunkExtensions
     mapping[chunk.NodeId] = value;
   }
 
+  /// <summary>
+  /// Create a stub chunk copying just the required fields
+  /// for <see cref="IKeybagChunk"/>, but no content.
+  /// </summary>
+  public static KeybagChunkStub ToStub(this IKeybagChunk chunk)
+  {
+    return 
+      chunk is KeybagChunkStub stub
+      ? stub
+      : new KeybagChunkStub(chunk);
+  }
+
+  /// <summary>
+  /// Create a long identifier for the chunk, combining both
+  /// <see cref="IKeybagChunk.NodeId"/> and <see cref="IKeybagChunk.EditId"/>.
+  /// </summary>
+  public static UInt128 LongId(this IKeybagChunk chunk)
+  {
+    return new UInt128((ulong)chunk.NodeId.Value, (ulong)chunk.EditId.Value);
+  }
+
 }
 

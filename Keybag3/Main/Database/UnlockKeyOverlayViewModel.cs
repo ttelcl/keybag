@@ -34,11 +34,11 @@ public class UnlockKeyOverlayViewModel: ViewModelBase
     KeyDescriptor = keyDescriptor;
     KeyLabel = keyLabel;
     _completed = completed;
-    CancelCommand = new DelegateCommand(p => { Host.PopOverlay(this); });
+    CancelCommand = new DelegateCommand(
+      p => { Cancel(); });
     TryUnlockCommand = new DelegateCommand(
-        p => { TryUnlock(); },
-        p => IsPassphraseLegal && String.IsNullOrEmpty(PassphraseError)
-      );
+      p => { TryUnlock(); },
+      p => IsPassphraseLegal && String.IsNullOrEmpty(PassphraseError));
   }
 
   public ICommand CancelCommand { get; }

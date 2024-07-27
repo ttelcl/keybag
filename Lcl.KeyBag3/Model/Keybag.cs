@@ -82,6 +82,16 @@ public class Keybag
   public StoredChunkMap Chunks { get; }
 
   /// <summary>
+  /// Check if there are any chunks in this <see cref="Keybag"/>'s
+  /// <see cref="Chunks"/> list that are unsaved (i.e. have 
+  /// no <see cref="StoredChunk.FileOffset"/> set)
+  /// </summary>
+  public bool HasUnsavedChunks()
+  {
+    return Chunks.HasUnsaved();
+  }
+
+  /// <summary>
   /// The file header node
   /// </summary>
   public StoredChunk FileChunk { get => Header.FileChunk; }
@@ -317,7 +327,7 @@ public class Keybag
   /// <param name="cryptor">
   /// The cryptor used to create the new seal.
   /// </param>
-  public void WriteFull(Stream file, ChunkCryptor cryptor)
+  private void WriteFull(Stream file, ChunkCryptor cryptor)
   {
     // exclude seals from calculation of latest chunk update time
     var latestChunk =
@@ -349,11 +359,13 @@ public class Keybag
 
   /// <summary>
   /// Write the entire key bag (header and chunks) to a file.
+  /// Does not do anything with the associated history file.
   /// If <paramref name="fileName"/> already exists, a backup
   /// copy of it is made.
   /// </summary>
-  public void WriteFull(string fileName, ChunkCryptor cryptor)
+  public void WriteFullNoHistory(string fileName, ChunkCryptor cryptor)
   {
+    fileName = Path.GetFullPath(fileName);
     if(!IsSealValidated || LastSeal==null)
     {
       if(LastSeal == null || !LastChunkIsSeal)
@@ -369,4 +381,76 @@ public class Keybag
       trx.Commit();
     }
   }
+
+  /// <summary>
+  /// Write the entire keybag to a file, optionally also saving the
+  /// history file. This overload expects a preallocated history handler
+  /// as argument, to allocate it on the fly without reuse in mind,
+  /// use <see cref="WriteFull(string, ChunkCryptor, bool)"/> instead.
+  /// </summary>
+  /// <param name="fileName">
+  /// The name of the *.kb3 file to save to
+  /// </param>
+  /// <param name="cryptor">
+  /// The encryption logic (used to create the seal)
+  /// </param>
+  /// <param name="keybagHistory">
+  /// If not null: A preallocated keybag history handler for this keybag;
+  /// after writing the keybag and the history file, the history records
+  /// are removed from this keybag.
+  /// If null: history is not processed (equivalent to calling
+  /// <see cref="WriteFullNoHistory(string, ChunkCryptor)"/>).
+  /// </param>
+  /// <exception cref="InvalidOperationException"></exception>
+  public void WriteFull(
+    string fileName,
+    ChunkCryptor cryptor,
+    KeybagHistory? keybagHistory)
+  {
+    if(keybagHistory != null)
+    {
+      if(!Object.ReferenceEquals(keybagHistory.MainKeybag, this))
+      {
+        throw new InvalidOperationException(
+          "History manager does not match keybag");
+      }
+    }
+    WriteFullNoHistory(fileName, cryptor);
+    keybagHistory?.SaveHistory();
+  }
+
+  /// <summary>
+  /// Write the entire keybag to a file and optionally also
+  /// save the history file. This overload creates the history handler
+  /// as needed instead of using a preallocated one like
+  /// <see cref="WriteFull(string, ChunkCryptor, KeybagHistory?)"/>
+  /// does.
+  /// </summary>
+  /// <param name="fileName">
+  /// The name of the *.kb3 file to save to
+  /// </param>
+  /// <param name="cryptor">
+  /// The encryption logic (used to create the seal)
+  /// </param>
+  /// <param name="saveHistory">
+  /// If true: also save the history file, creating and preloading
+  /// the history handler for this keybag as needed.
+  /// If false: do not process history (equivalent to just calling 
+  /// <see cref="WriteFullNoHistory(string, ChunkCryptor)"/>).
+  /// </param>
+  public void WriteFull(
+    string fileName,
+    ChunkCryptor cryptor,
+    bool saveHistory)
+  {
+    fileName = Path.GetFullPath(fileName);
+    KeybagHistory? keybagHistory = null;
+    if(saveHistory)
+    {
+      keybagHistory = new KeybagHistory(this, fileName);
+    }
+    WriteFull(fileName, cryptor, keybagHistory);
+  }
+
+  // --
 }

@@ -34,6 +34,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     MessageHub = new MessageHub();
     var fileName = owner.Model.PrimaryFile;
     RawKeybag = Keybag.FromFile(fileName);
+    RawHistory = new KeybagHistory(RawKeybag, fileName);
     ChunkPairs = new ChunkPairMap();
     ChunkPairs.InsertAll(RawKeybag.Chunks);
     EntrySpace = new ChunkSpace<EntryViewModel>();
@@ -290,6 +291,8 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
 
   private Keybag RawKeybag { get; set; }
 
+  private KeybagHistory RawHistory { get; set; }
+
   private ChunkPairMap ChunkPairs { get; /*set;*/ }
 
   public KeybagSynchronizer CreateSynchronizer()
@@ -318,25 +321,43 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     }
   }
 
-  public ChunkId GetNewestChunkEdit()
-  {
-    return AllRawChunks.Max(c => c.EditId);
+  /// <summary>
+  /// Enumerate all stored chunks in the chunk pair storage
+  /// (but not seal chunks).
+  /// </summary>
+  public IEnumerable<StoredChunk> AllChunks {
+    get {
+      foreach(var pair in ChunkPairs.Chunks)
+      {
+        var storedChunk = pair.PersistChunk;
+        if(storedChunk != null)
+        {
+          yield return storedChunk;
+        }
+      }
+    }
   }
 
+  public ChunkId GetNewestChunkEdit()
+  {
+    return AllChunks.MaxBy(c => c.EditId.Value)!.EditId;
+  }
+
+  /// <summary>
+  /// Update the "modified" flag for the normal editing use case.
+  /// Not valid for Synchronization!
+  /// </summary>
   public void UpdateHasUnsavedChunks()
   {
     HasUnsavedChunks = ChunkPairs.Chunks.Any(
       pair => pair.PersistChunk == null || !pair.PersistChunk.FileOffset.HasValue);
-
-    //// TEMP DIAGNOSTICS
-    //var countMissing = ChunkPairs.Chunks.Count(
-    //  pair => pair.PersistChunk == null); // should be 0
-    //var countUnsaved = ChunkPairs.Chunks.Count(
-    //  pair => pair.PersistChunk != null && !pair.PersistChunk.FileOffset.HasValue);
-    //Trace.TraceError(
-    //  $"Needs saving diagnostics: {countMissing} missing; {countUnsaved} unsaved");
   }
 
+  /// <summary>
+  /// Check if there are any unsaved chunks in the keybag's chunk pairs.
+  /// Note that synchronization bypasses the chunk pairs completely,
+  /// so it is NOT valid for that use case
+  /// </summary>
   public bool HasUnsavedChunks {
     get => _hasUnsavedChunks;
     private set {
@@ -380,14 +401,16 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     }
     /*
      * At this point this viewmodel has not been synced to RawKeybag yet!
-     * So let's do that first.
+     * So let's do that first. make sure NOT to include seal chunks
      */
-    foreach(var chunk in AllRawChunks)
+    foreach(var chunk in AllChunks)
     {
       RawKeybag.Chunks.PutChunk(chunk);
     }
     var primaryFile = Owner.Model.PrimaryFile;
-    RawKeybag.WriteFull(primaryFile, key);
+    RawKeybag.WriteFull(primaryFile, key, RawHistory);
+    SelectedEntry?.PostSaveNotification();
+    Owner.Refresh();
     UpdateHasUnsavedChunks();
     if(HasUnsavedChunks)
     {

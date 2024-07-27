@@ -22,12 +22,16 @@
     Icon="pack://application:,,,/Keybag3;component/assets/three-keys-256.ico"
     d:DataContext="{d:DesignInstance local:MainViewModel, IsDesignTimeCreatable=False}"
     Loaded="MetroWindow_Loaded">
+    <mah:MetroWindow.Resources>
+    </mah:MetroWindow.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" IsEnabled="{Binding NoOverlay}">
                 <MenuItem Header="_Exit" Command="{Binding ExitCommand}">
                     <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Padding="5,0,0,0" Height="20" Width="25" Kind="ExitToApp" />
+                        <iconPacks:PackIconMaterial
+                            Kind="ExitToApp"
+                            Padding="5,0,0,0" Height="20" Width="25" />
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>

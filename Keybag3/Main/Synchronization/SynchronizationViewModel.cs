@@ -4,38 +4,74 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Threading;
+
+using Lcl.KeyBag3.Storage;
 
 using Keybag3.WpfUtilities;
 using Keybag3.Main.KeybagContent;
 using Keybag3.Main.Database;
-using System.Windows.Input;
-using System.Collections.ObjectModel;
-using Lcl.KeyBag3.Storage;
 
 namespace Keybag3.Main.Synchronization;
 
 public class SynchronizationViewModel: ViewModelBase
 {
+  private DispatcherTimer _timer;
+  private KeybagViewModel _target;
+
   private SynchronizationViewModel(
     KeybagViewModel target)
   {
-    Target = target;
-    SyncModel = Target.CreateSynchronizer();
+    _target = target;
+    _timer = new DispatcherTimer() {
+      Interval = TimeSpan.FromMilliseconds(250),
+      IsEnabled = false, // Start out stopped!
+    };
+    _timer.Tick += (s, e) => {
+      Step();
+    };
+    SetModel = target.Owner;
     SyncTargets = new ObservableCollection<SyncTargetViewModel>();
+    SyncModel = target.CreateSynchronizer();
     foreach(var syncBag in SyncModel.Targets)
     {
       SyncTargets.Add(new SyncTargetViewModel(this, syncBag));
     }
     DoneCommand = new DelegateCommand(p => { PopMe(); });
+    StepCommand = new DelegateCommand(
+      p => { Step(); },
+      p => StepEnabled);
+    ConnectExistingCommand = new DelegateCommand(
+      p => { ConnectExisting(); },
+      p => Stage == SynchronizationStage.NotStarted
+        || Stage == SynchronizationStage.Done);
+    ExportAsTargetCommand = new DelegateCommand(
+      p => { ExportAsTarget(); },
+      p => Stage == SynchronizationStage.NotStarted
+        || Stage == SynchronizationStage.Done);
+  }
+
+  public void Reinitialize()
+  {
+    Stage = SynchronizationStage.NotStarted;
+    SyncModel = _target.CreateSynchronizer();
+    SyncTargets.Clear();
+    foreach(var syncBag in SyncModel.Targets)
+    {
+      SyncTargets.Add(new SyncTargetViewModel(this, syncBag));
+    }
   }
 
   public static bool TryPushOverlay(
-    KeybagViewModel target)
+    KeybagViewModel target,
+    bool enableAutoStep)
   {
     if(!target.Decoded)
     {
@@ -69,18 +105,25 @@ public class SynchronizationViewModel: ViewModelBase
 
     var syncModel = new SynchronizationViewModel(target);
     syncModel.PushMe();
+    syncModel.EnableAutoStepping = enableAutoStep;
     return true;
   }
 
+  public bool EnableAutoStepping { get; set; }
+
   public ICommand DoneCommand { get; }
 
-  public KeybagViewModel Target { get; }
+  public ICommand StepCommand { get; }
 
-  public KeybagSetViewModel SetModel { get => Target.Owner; }
+  public ICommand ConnectExistingCommand { get; }
+
+  public ICommand ExportAsTargetCommand { get; }
+
+  public KeybagSetViewModel SetModel { get; }
 
   public KeybagDbViewModel DbModel { get => SetModel.Owner; }
 
-  public KeybagSynchronizer SyncModel { get; }
+  public KeybagSynchronizer SyncModel { get; private set; }
 
   public ObservableCollection<SyncTargetViewModel> SyncTargets { get; }
 
@@ -90,7 +133,144 @@ public class SynchronizationViewModel: ViewModelBase
 
   public int PrimaryExportTargetCount { get => SyncModel.PrimaryExportTargetCount; }
 
-  public void LoadAndDonateToPrimary()
+  public SynchronizationStage Stage {
+    get => _stage;
+    set {
+      if(SetValueProperty(ref _stage, value))
+      {
+        RaisePropertyChanged(nameof(NextStepText));
+        RaisePropertyChanged(nameof(StepEnabled));
+        RaisePropertyChanged(nameof(StepCommand));
+        RaisePropertyChanged(nameof(IsInhaled));
+        RaisePropertyChanged(nameof(InhaledCountColor));
+      }
+    }
+  }
+  private SynchronizationStage _stage = SynchronizationStage.NotStarted;
+
+  public string NextStepText {
+    get => Stage switch {
+      SynchronizationStage.NotStarted => "Synchronize!",
+      SynchronizationStage.Loading => "(loading...)",
+      SynchronizationStage.Loaded => "Inhale",
+      SynchronizationStage.Inhaling => "(importing)",
+      SynchronizationStage.Inhaled => "Exhale",
+      SynchronizationStage.Exhaling => "(exporting)",
+      SynchronizationStage.Exhaled => "Save",
+      SynchronizationStage.Saving => "(saving...)",
+      SynchronizationStage.Done => "Completed",
+      SynchronizationStage.Error => "Aborted",
+      _ => throw new InvalidOperationException("Invalid stage"),
+    };
+  }
+
+  public bool StepEnabled {
+    get => SyncTargets.Count > 0
+        && (Stage switch {
+          SynchronizationStage.NotStarted => true,
+          SynchronizationStage.Loaded => true,
+          SynchronizationStage.Inhaled => true,
+          SynchronizationStage.Exhaled => true,
+          SynchronizationStage.Done => false,
+          SynchronizationStage.Error => false,
+          _ => false,
+        });
+  }
+
+  public bool HasTargets {
+    get => SyncTargets.Count > 0;
+  }
+
+  public bool IsInhaled =>
+    Stage >= SynchronizationStage.Inhaled;
+
+  public string InhaledCountColor {
+    get => SyncModel.PrimaryChangedChunkCount == 0
+      ? "LightGray"
+      : Stage > SynchronizationStage.Saving ? "OK" : "Changed";
+  }
+
+  public void Step()
+  {
+    _timer.IsEnabled = false;
+    try
+    {
+      Mouse.OverrideCursor = Cursors.Wait;
+      switch(Stage)
+      {
+        case SynchronizationStage.NotStarted:
+          Load();
+          break;
+        case SynchronizationStage.Loaded:
+          Inhale();
+          break;
+        case SynchronizationStage.Inhaled:
+          Exhale();
+          break;
+        case SynchronizationStage.Exhaled:
+          Save();
+          break;
+        case SynchronizationStage.Done:
+          break;
+        case SynchronizationStage.Error:
+          MessageBox.Show(
+            "Synchronization has been aborted.",
+            "Error",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+          break;
+        default:
+          throw new InvalidOperationException("Invalid stage");
+      }
+    }
+    catch(Exception)
+    {
+      Stage = SynchronizationStage.Error;
+      throw;
+    }
+    finally
+    {
+      Mouse.OverrideCursor = null;
+    }
+    if(EnableAutoStepping
+      && Stage != SynchronizationStage.Done
+      && Stage != SynchronizationStage.Error)
+    {
+      _timer.IsEnabled = true;
+    }
+  }
+
+  private void StartStage(
+    SynchronizationStage expected,
+    SynchronizationStage newStage)
+  {
+    if(Stage != expected)
+    {
+      Stage = SynchronizationStage.Error;
+      throw new InvalidOperationException(
+        $"Expected stage {expected}, but was {Stage}");
+    }
+    Stage = newStage;
+  }
+
+  private void CompleteStage(
+    SynchronizationStage expected,
+    SynchronizationStage newStage)
+  {
+    if(Stage == SynchronizationStage.Error)
+    {
+      return;
+    }
+    if(Stage != expected)
+    {
+      Stage = SynchronizationStage.Error;
+      throw new InvalidOperationException(
+        $"Expected stage {expected}, but was {Stage}");
+    }
+    Stage = newStage;
+  }
+
+  private void Load()
   {
     var key = SetModel.FindKey();
     if(key == null)
@@ -100,13 +280,129 @@ public class SynchronizationViewModel: ViewModelBase
         "Internal error",
         MessageBoxButton.OK,
         MessageBoxImage.Error);
+      Stage = SynchronizationStage.Error;
       return;
     }
-    SyncModel.LoadAndDonateToPrimary(key);
+    StartStage(SynchronizationStage.NotStarted, SynchronizationStage.Loading);
+    foreach(var target in SyncTargets)
+    {
+      target.Target.TryLoad(key);
+      target.Refresh();
+    }
+    CompleteStage(SynchronizationStage.Loading, SynchronizationStage.Loaded);
+  }
+
+  private void Inhale()
+  {
+    StartStage(SynchronizationStage.Loaded, SynchronizationStage.Inhaling);
+    SyncModel.Inhale();
+    CompleteStage(SynchronizationStage.Inhaling, SynchronizationStage.Inhaled);
+    foreach(var target in SyncTargets)
+    {
+      target.Refresh();
+    }
     RaisePropertyChanged(nameof(PrimaryImportSourceCount));
     RaisePropertyChanged(nameof(PrimaryChangedChunkCount));
   }
 
+  private void Exhale()
+  {
+    StartStage(SynchronizationStage.Inhaled, SynchronizationStage.Exhaling);
+    SyncModel.Exhale();
+    CompleteStage(SynchronizationStage.Exhaling, SynchronizationStage.Exhaled);
+    foreach(var target in SyncTargets)
+    {
+      target.Refresh();
+    }
+    RaisePropertyChanged(nameof(PrimaryExportTargetCount));
+  }
+
+  private void Save()
+  {
+    StartStage(SynchronizationStage.Exhaled, SynchronizationStage.Saving);
+    var key = SetModel.FindKey();
+    if(key == null)
+    {
+      MessageBox.Show(
+        "Internal error - keybag is not unlocked",
+        "Internal error",
+        MessageBoxButton.OK,
+        MessageBoxImage.Error);
+      Stage = SynchronizationStage.Error;
+      return;
+    }
+    var primary = SyncModel.Primary;
+    if(primary.HasUnsavedChunks())
+    {
+      Trace.TraceInformation(
+        $"Saving primary {SetModel.Model.PrimaryFile}");
+      // We need to use a low-level save here, because "Target" is
+      // not kept updated during synchronization
+      primary.WriteFull(SetModel.Model.PrimaryFile, key, true);
+    }
+    else
+    {
+      Trace.TraceInformation(
+        $"No changes in primary {SetModel.Model.PrimaryFile}");
+    }
+    foreach(var target in SyncTargets)
+    {
+      target.HasUnsavedChanges = !target.IsReadOnly && target.Target.HasUnsaved();
+      if(target.HasUnsavedChanges && !target.IsReadOnly)
+      {
+        Trace.TraceInformation(
+          $"Saving target {target.TargetFullFile}");
+        target.Target.TrySave(key);
+      }
+      target.Refresh();
+    }
+
+    CompleteStage(SynchronizationStage.Saving, SynchronizationStage.Done);
+  }
+
+  private void ConnectExisting()
+  {
+    var result = MessageBox.Show(
+      "Connecting existing keybags is done from the main database view.\n" +
+      "Go there now?",
+      "Redirect",
+      MessageBoxButton.YesNo,
+      MessageBoxImage.Question);
+    if(result == MessageBoxResult.Yes)
+    {
+      PopMe();
+      DbModel.StartImport();
+    }
+  }
+
+  private void ExportAsTarget()
+  {
+    SetModel.ExportKeybag();
+    Reinitialize();
+    RaisePropertyChanged(nameof(HasTargets));
+  }
+
+  public void Disconnect(SyncTargetViewModel stvm)
+  {
+    var result = MessageBox.Show(
+      $"Are you sure you want to stop synchronizing\n"+
+      $"{stvm.Target.Target.Location}\nwith this keybag?",
+      "Confirm",
+      MessageBoxButton.YesNo,
+      MessageBoxImage.Question);
+    if(result == MessageBoxResult.Yes)
+    {
+      if(SetModel.Model.TryDisconnect(stvm.Target.Target))
+      {
+        Reinitialize();
+        RaisePropertyChanged(nameof(HasTargets));
+      }
+      else
+      {
+        Trace.TraceError($"Failed to disconnect {stvm.Target.Target.Location}.");
+      }
+    }
+  }
 
   private void PushMe()
   {
@@ -115,6 +411,15 @@ public class SynchronizationViewModel: ViewModelBase
 
   private void PopMe()
   {
+    if(Stage < SynchronizationStage.NotStarted
+      || Stage > SynchronizationStage.Loaded)
+    {
+      // Anything might have happened to the primary keybag,
+      // so reload it just to be safe. This can only be safely
+      // skipped if we didn't even get to the inhale phase and
+      // there were no errors.
+      SetModel.Reload(true);
+    }
     DbModel.AppModel.PopOverlay(this);
   }
 

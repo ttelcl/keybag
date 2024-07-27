@@ -10,11 +10,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+
 using Lcl.KeyBag3.Crypto;
 using Lcl.KeyBag3.Model;
 using Lcl.KeyBag3.Utilities;
-
-using Newtonsoft.Json;
 
 namespace Lcl.KeyBag3.Storage;
 
@@ -28,11 +28,37 @@ public class KeybagDb
   /// <summary>
   /// Create a new KeybagDb
   /// </summary>
-  public KeybagDb()
+  public KeybagDb(
+    string? dbFolder = null)
   {
+    dbFolder ??= KeybagPrimaryFolder;
     _sets = [];
+    DbFolder = Path.GetFullPath(dbFolder);
+    if(!Directory.Exists(DbFolder))
+    {
+      Directory.CreateDirectory(DbFolder);
+    }
+    AppStateStore = new ViewStateStore(
+      Path.Combine(DbFolder, "keybag3.appstate.json"));
+    AppStateView = AppStateStore.CreateView();
     Reload();
   }
+
+  /// <summary>
+  /// The directory where this DB lives.
+  /// Defaults to <see cref="KeybagPrimaryFolder"/>.
+  /// </summary>
+  public string DbFolder { get; }
+
+  /// <summary>
+  /// The application state store for this keybag database
+  /// </summary>
+  public ViewStateStore AppStateStore { get; }
+
+  /// <summary>
+  /// A view on the application state
+  /// </summary>
+  public JObjectViewEx AppStateView { get; }
 
   /// <summary>
   /// The collection of all keybagsets
@@ -69,7 +95,7 @@ public class KeybagDb
   public void Reload()
   {
     var descriptors = new Dictionary<ChunkId, KeybagSetDescriptor>();
-    var files = Directory.GetFiles(KeybagPrimaryFolder, "*.kb3meta.json");
+    var files = Directory.GetFiles(DbFolder, "*.kb3meta.json");
     foreach(var file in files)
     {
       var json = File.ReadAllText(file);
@@ -122,7 +148,7 @@ public class KeybagDb
       []);
     var kbs = new KeybagSet(this, descriptor);
     var kbf = new Keybag(kbh);
-    kbf.WriteFull(kbs.PrimaryFile, cryptor);
+    kbf.WriteFull(kbs.PrimaryFile, cryptor, true);
     Put(kbs);
     return kbs;
   }
@@ -216,19 +242,21 @@ public class KeybagDb
   /// <returns>
   /// The name of the metadata file
   /// </returns>
-  public static string GetMetaName(ChunkId fileId)
+  public string GetMetaName(ChunkId fileId)
   {
     return Path.Combine(
-      KeybagPrimaryFolder,
+      DbFolder,
       $"{fileId.ToBase26()}.kb3meta.json");
   }
 
   /// <summary>
-  /// The local data folder for KB3 data
+  /// The default local data folder for KB3 data
+  /// (<c><em>{LocalApplicationData}</em>\KeyBag3</c>)
   /// </summary>
   public static string KeybagPrimaryFolder { get; } =
     Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        Environment.GetFolderPath(
+          Environment.SpecialFolder.LocalApplicationData),
         "KeyBag3");
 
   static KeybagDb()

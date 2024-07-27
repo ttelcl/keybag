@@ -26,11 +26,20 @@ public class SectionMap: ViewModelBase<KeybagViewModel>
   {
     _sectionMap = new Dictionary<string, SectionModel>(
       StringComparer.InvariantCultureIgnoreCase);
-    DefaultSection = new SectionModel("(default)", this, true);
+    var defaultSectionValue =
+      // If not found, this will initialize the section settings!
+      // And by extension, this may initialize the settings file.
+      Model.Owner.Model.GetSectionState(DefaultSectionName);
+    DefaultSection = new SectionModel(
+      DefaultSectionName, this, defaultSectionValue);
     DefaultSection.IsEnabled = false;
     _sectionMap[DefaultSection.SectionName] = DefaultSection;
+    // (Sections other than the default section are created on use.)
+    // Initialize the sections viewmodel
     RebuildSections(false /* prevent recursion */);
   }
+
+  public const string DefaultSectionName = "(default)";
 
   public ChunkSpace<EntryViewModel> Space { get => Model.EntrySpace; }
 

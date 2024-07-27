@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:local="clr-namespace:Keybag3.Main.KeybagContent"
     xmlns:db="clr-namespace:Keybag3.Main.Database"
+    xmlns:util="clr-namespace:Keybag3.WpfUtilities"
     xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
     xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
     mc:Ignorable="d" 
@@ -18,8 +19,10 @@
             BorderThickness="1"
             BorderBrush="{DynamicResource MahApps.Brushes.Accent2}"
             Background="{DynamicResource MahApps.Brushes.Accent4}">
-            <StackPanel Orientation="Horizontal">
+            <DockPanel>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding ViewDatabaseCommand}"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Back to the keybag overview">
                     <StackPanel Orientation="Horizontal">
                         <iconPacks:PackIconMaterial 
@@ -28,10 +31,12 @@
                         <iconPacks:PackIconMaterial 
                             Kind="Database"
                             Padding="2,0" Height="24" Width="24" />
-                        <!--<TextBlock FontSize="14" Padding="2,2" Text="Back to Keybags"/>-->
+                        <TextBlock FontSize="14" Padding="5,2" Text="Back"/>
                     </StackPanel>
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding TryUnlockCommand}"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Enter passphrase for this keybag"
                         Visibility="{Binding KeyKnown,
                             Converter={StaticResource VisibleIfString},
@@ -46,6 +51,8 @@
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding ToggleContentCommand}"
                         MinWidth="80"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Show or hide content"
                         Visibility="{Binding KeyKnown,
                             Converter={StaticResource VisibleIfString},
@@ -58,8 +65,26 @@
                         <TextBlock FontSize="14" Padding="2,2" Text="{Binding ShowText}"/>
                     </StackPanel>
                 </Button>
+                <Button Padding="5,3" Margin="5,2" Command="{Binding ShowSyncOverlayCommand}"
+                        MinWidth="80"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
+                        ToolTip="Show the synchronization view for this keybag"
+                        Visibility="{Binding KeyKnownAndShowing,
+                            Converter={StaticResource VisibleIfString},
+                            ConverterParameter=True}"
+                        ToolTipService.ShowOnDisabled="True">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial
+                            Kind="SwapHorizontalBold" Padding="2,0"
+                            Height="24" Width="24" />
+                        <TextBlock FontSize="14" Padding="2,2" Text="Sync ..."/>
+                    </StackPanel>
+                </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding SaveContentCommand}"
                         MinWidth="80"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Save changes to this keybag"
                         Visibility="{Binding KeyKnownAndShowing,
                             Converter={StaticResource VisibleIfString},
@@ -77,6 +102,8 @@
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding DiscardCommand}"
                         MinWidth="80"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Discard changes to this keybag"
                         Visibility="{Binding KeyKnownAndShowing,
                             Converter={StaticResource VisibleIfString},
@@ -85,31 +112,55 @@
                     <StackPanel Orientation="Horizontal">
                         <iconPacks:PackIconMaterial
                             Kind="FileUndo" Padding="2,2"
-                            Foreground="#EEDD5533"
+                            Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"
                             Height="24" Width="24" />
-                        <TextBlock FontSize="14" Padding="2,2"
-                                   Foreground="#EEDD5533"
-                                   Text="Discard ..."/>
+                        <TextBlock
+                            FontSize="14" Padding="2,2"
+                            Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"
+                            Text="Discard ..."/>
                     </StackPanel>
                 </Button>
-                <Button Padding="5,3" Margin="5,2" Command="{Binding ShowSyncOverlayCommand}"
-                        MinWidth="80"
-                        ToolTip="Show the synchronization centre for this keybag"
-                        Visibility="{Binding KeyKnownAndShowing,
-                            Converter={StaticResource VisibleIfString},
-                            ConverterParameter=True}"
-                        ToolTipService.ShowOnDisabled="True">
-                    <StackPanel Orientation="Horizontal">
-                        <!--<iconPacks:PackIconMaterial
-                            Kind="SyncAlert" Padding="2,0"
-                            Height="24" Width="24" />-->
-                        <iconPacks:PackIconMaterial
-                            Kind="SwapHorizontalBold" Padding="2,0"
-                            Height="24" Width="24" />
-                        <TextBlock FontSize="14" Padding="2,2" Text="Sync ..."/>
-                    </StackPanel>
+                <!-- Hamburger menu -->
+                <Button
+                    Padding="5,3" Margin="5,2" DockPanel.Dock="Right"
+                    util:ContextMenuTools.OpenOnLeftClick="True"
+                    ContextMenuService.Placement="Bottom">
+                    <Button.Content>
+                        <iconPacks:PackIconMaterial Kind="Menu" />
+                    </Button.Content>
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <!--<MenuItem
+                                ToolTip="Discard changes to this keybag"
+                                ToolTipService.ShowOnDisabled="True"
+                                Command="{Binding DiscardCommand}"
+                                Header="Discard ...">
+                                <MenuItem.Icon>
+                                    <iconPacks:PackIconMaterial
+                                        Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"
+                                        Kind="FileUndo" Padding="2,0"
+                                        Height="20" Width="20" />
+                                </MenuItem.Icon>
+                            </MenuItem>-->
+                            <MenuItem
+                                ToolTip="Close this keybag and forget the key"
+                                ToolTipService.InitialShowDelay="100"
+                                ToolTipService.BetweenShowDelay="0"
+                                ToolTipService.ShowOnDisabled="True"
+                                Command="{Binding EjectCommand}"
+                                Header="Unload">
+                                <MenuItem.Icon>
+                                    <iconPacks:PackIconMaterial
+                                        Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"
+                                        Kind="Eject" Padding="2,0"
+                                        Height="20" Width="20" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </Button.ContextMenu>
                 </Button>
-            </StackPanel>
+                <StackPanel/>
+            </DockPanel>
         </Border>
         <Grid>
             <local:KeybagView

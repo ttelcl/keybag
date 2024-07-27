@@ -40,6 +40,21 @@ public class KeybagDbViewModel:
 
     OverlayHost = appModel;
 
+    var orderSettings = Model.AppStateView.GetEnumView(
+      KeybagSortOrder.ByTag);
+    if(orderSettings.IsPropertyKnown(__sortOrderKey))
+    {
+      _sortOrder = orderSettings[__sortOrderKey];
+    }
+    else
+    { 
+      _sortOrder = orderSettings.DefaultValue;
+      orderSettings[__sortOrderKey] = _sortOrder;
+      Model.AppStateStore.Save();
+    }
+
+    _defaultKeybagId = Model.AppStateView.Strings[__defaultKeybagKey];
+
     // TEMPORARY
     TestOverlayTestCommand = new DelegateCommand(p => {
       OverlayHost.PushOverlay(new TestOverlayViewModel(OverlayHost));
@@ -124,16 +139,6 @@ public class KeybagDbViewModel:
       kbs => kbs.Tag.Equals(tag, StringComparison.InvariantCultureIgnoreCase));
   }
 
-  public KeybagSetViewModel? SelectedKeybag {
-    get => _selectedKeybag;
-    set {
-      if(SetNullableInstanceProperty(ref _selectedKeybag, value))
-      {
-      }
-    }
-  }
-  private KeybagSetViewModel? _selectedKeybag;
-
   public string Title { get => "Keybag Database"; }
 
   public bool IsEmpty {
@@ -185,6 +190,7 @@ public class KeybagDbViewModel:
       KeybagSets.Add(vm);
     }
     IsEmpty = KeybagSets.Count == 0;
+    UpdateDefaultKeybag();
     SortKeybags();
   }
 
@@ -194,10 +200,79 @@ public class KeybagDbViewModel:
       if(SetValueProperty(ref _sortOrder, value))
       {
         SortKeybags();
+        var settingView = Model.AppStateView.GetEnumView(
+          KeybagSortOrder.ByTag);
+        settingView[__sortOrderKey] = value;
+        Model.AppStateStore.Save();
       }
     }
   }
-  private KeybagSortOrder _sortOrder = KeybagSortOrder.ByLastModified;
+  private KeybagSortOrder _sortOrder = KeybagSortOrder.ByTag;
+  private const string __sortOrderKey = "keybag_sortorder";
+
+  public string? DefaultKeybagId {
+    get => _defaultKeybagId;
+    set {
+      if(SetValueProperty(ref _defaultKeybagId, value))
+      {
+        UpdateDefaultKeybag();
+        Model.AppStateView.Strings[__defaultKeybagKey] = value;
+        Model.AppStateStore.Save();
+      }
+    }
+  }
+  private string? _defaultKeybagId = null;
+  private const string __defaultKeybagKey = "default_keybag";
+
+  public KeybagSetViewModel? DefaultKeybag {
+    get => _defaultKeybag;
+    private set {
+      // Must only be called from UpdateDefaultKeybag
+      // To change, set DefaultKeybagId instead or
+      // call SetDefaultKeybag
+      var old = _defaultKeybag;
+      if(SetNullableInstanceProperty(ref _defaultKeybag, value))
+      {
+        if(old!=null)
+        {
+          old.IsDefault = false;
+        }
+        if(value!=null)
+        {
+          value.IsDefault = true;
+        }
+      }
+    }
+  }
+  private KeybagSetViewModel? _defaultKeybag = null;
+
+  public void UpdateDefaultKeybag()
+  {
+    if(DefaultKeybagId != null)
+    {
+      Trace.TraceInformation(
+        $"Updating default keybag being {DefaultKeybagId}");
+      DefaultKeybag = KeybagSets.FirstOrDefault(
+        kbs => kbs.Id26 == DefaultKeybagId);
+      if(DefaultKeybag == null)
+      {
+        Trace.TraceError(
+          $"There is no keybag matching the default keybag ID {DefaultKeybagId}");
+      }
+    }
+    else
+    {
+      Trace.TraceInformation(
+        "Updating default keybag to be none");
+      DefaultKeybag = null;
+    }
+  }
+
+  public void SetDefaultKeybag(KeybagSetViewModel? kbs)
+  {
+    DefaultKeybagId = kbs?.Id26;
+    SortKeybags();
+  }
 
   public void SortKeybags()
   {
@@ -212,6 +287,18 @@ public class KeybagDbViewModel:
       case KeybagSortOrder.ByLastModified:
         target.Sort((a, b) => -a.EditId.Value.CompareTo(b.EditId.Value));
         break;
+    }
+    // Move default keybag (if any) to top
+    if(DefaultKeybagId != null)
+    {
+      var defIndex = target.FindIndex(
+        kbs => kbs.Id26 == DefaultKeybagId);
+      if(defIndex >= 0)
+      {
+        var defKbs = target[defIndex];
+        target.RemoveAt(defIndex);
+        target.Insert(0, defKbs);
+      }
     }
     var inOrder = target.SequenceEqual(KeybagSets);
     if(!inOrder)

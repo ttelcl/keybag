@@ -74,19 +74,13 @@ public class KeybagSet
     }
     DefaultShortName = tag + ".kb3";
     PrimaryFile = Path.Combine(
-      KeybagDb.KeybagPrimaryFolder,
+      Owner.DbFolder,
       $"{Tag}.{FileId.ToBase26()}.primary.kb3");
-    ViewStateFile = Path.Combine(
-      KeybagDb.KeybagPrimaryFolder,
+    var viewStateFile = Path.Combine(
+      Owner.DbFolder,
       $"{FileId.ToBase26()}.viewstate.json");
-    if(File.Exists(ViewStateFile))
-    {
-      ViewState = JObject.Parse(File.ReadAllText(ViewStateFile));
-    }
-    else
-    {
-      ViewState = new JObject();
-    }
+    ViewState = new ViewStateStore(viewStateFile);
+    ViewStateView = ViewState.CreateView();
     // Make sure the primary file is not a sync target by silently
     // dropping such occurrences
     var primaryFid = FileIdentifier.FromPath(PrimaryFile);
@@ -166,28 +160,25 @@ public class KeybagSet
   /// <summary>
   /// The location of the view state file for this keybag
   /// </summary>
-  public string ViewStateFile { get; }
+  public string ViewStateFile { get => ViewState.StoreFile; }
 
   /// <summary>
   /// The persisted view state for this keybag on this computer.
   /// This is losely typed to improve forward and backward compatibility.
   /// </summary>
-  public JObject ViewState { get; }
+  public ViewStateStore ViewState { get; }
+
+  /// <summary>
+  /// A view on the view state.
+  /// </summary>
+  public JObjectViewEx ViewStateView { get; }
 
   /// <summary>
   /// Save the view state to the view state file
   /// </summary>
   public void SaveViewState()
   {
-    using(var trx = new FileWriteTransaction(ViewStateFile))
-    {
-      using(var writer = new StreamWriter(trx.Target))
-      {
-        writer.WriteLine(
-          JsonConvert.SerializeObject(ViewState, Formatting.Indented));
-      }
-      trx.Commit();
-    }
+    ViewState.Save();
   }
 
   /// <summary>
@@ -215,8 +206,28 @@ public class KeybagSet
     {
       sectionStates = new JObject();
       ViewState["sections"] = sectionStates;
+      sectionStates[sectionName] = true;
       SaveViewState();
       return true;
+    }
+  }
+
+  /// <summary>
+  /// Enumerate the section states as present in the view state
+  /// </summary>
+  public IEnumerable<KeyValuePair<string, bool>> GetSectionStates()
+  { // Currently unused. Initialization is done mostly on demand.
+    if(ViewState["sections"] is JObject sectionStates)
+    {
+      foreach(var kv in sectionStates)
+      {
+        if(kv.Value is JValue jv
+          && jv.Type == JTokenType.Boolean
+          && jv.Value is bool b)
+        {
+          yield return new KeyValuePair<string, bool>(kv.Key, b);
+        }
+      }
     }
   }
 
@@ -394,6 +405,19 @@ public class KeybagSet
   }
 
   /// <summary>
+  /// Try to disconnect the given file from this set
+  /// </summary>
+  public bool TryDisconnect(KeybagReference target)
+  {
+    if(_syncTargetMap.Remove(target.Location))
+    {
+      Save();
+      return true;
+    }
+    return false;
+  }
+
+  /// <summary>
   /// Export this set to a new synchronization file
   /// </summary>
   /// <param name="kb3file">
@@ -440,7 +464,7 @@ public class KeybagSet
   public void Save()
   {
     var descriptor = ToDescriptor();
-    var metaName = KeybagDb.GetMetaName(descriptor.FileId);
+    var metaName = Owner.GetMetaName(descriptor.FileId);
     var json = JsonConvert.SerializeObject(descriptor, Formatting.Indented);
     using(var trx = new FileWriteTransaction(metaName))
     {

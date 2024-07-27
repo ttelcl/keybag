@@ -18,23 +18,45 @@
         <DataTemplate DataType="{x:Type local:SyncTargetViewModel}">
             <Border
                 BorderThickness="1"
-                Padding="5"
+                Padding="5" Background="#282828" Margin="0,1"
                 BorderBrush="{DynamicResource MahApps.Brushes.Accent2}">
+                <Border.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem
+                            Header="Disconnect"
+                            Command="{Binding DisconnectCommand}">
+                            <MenuItem.Icon>
+                                <iconPacks:PackIconMaterial
+                                    Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"
+                                    Kind="Connection" Padding="2,0"
+                                    Height="20" Width="20" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </Border.ContextMenu>
                 <DockPanel>
                     <iconPacks:PackIconMaterial
-                        Kind="FileCancelOutline" Width="24" Height="24" DockPanel.Dock="Left"
-                        Visibility="{Binding IsAvailable, Converter={StaticResource VisibleIfNot}}"
-                        Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"/>
-                    <iconPacks:PackIconMaterial
-                        Kind="FileCheckOutline" Width="24" Height="24" DockPanel.Dock="Left"
-                        Visibility="{Binding IsAvailable, Converter={StaticResource VisibleIf}}"
-                        Foreground="{Binding Source=OK, Converter={StaticResource Kb3Fore}}"/>
+                        Kind="{Binding FileIcon}"
+                        Width="24" Height="24" DockPanel.Dock="Left"
+                        Foreground="{Binding FileIconColor, Converter={StaticResource Kb3Fore}}"
+                        />
                     <TextBlock
                         DockPanel.Dock="Left"
                         Padding="5,0"
                         FontWeight="Bold"
                         VerticalAlignment="Center"
+                        Foreground="{Binding FileNameColor, Converter={StaticResource Kb3Fore}}"
                         Text="{Binding TargetFullFile}"/>
+                    <iconPacks:PackIconMaterial
+                        Kind="Star" Width="24" Height="24" DockPanel.Dock="Left"
+                        Padding="10,0,0,0"
+                        VerticalAlignment="Center"
+                        ToolTip="Has unsaved changes"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
+                        Visibility="{Binding HasUnsavedChanges, Converter={StaticResource VisibleIf}}"
+                        Foreground="{Binding Source=Changed, Converter={StaticResource Kb3Fore}}"
+                        />
                     <TextBlock
                         DockPanel.Dock="Right"
                         Padding="5,0"
@@ -45,27 +67,48 @@
                     <StackPanel
                         Orientation="Horizontal" DockPanel.Dock="Right"
                         VerticalAlignment="Center"
+                        Background="#00000000"
                         ToolTip="Number of elements exported to this target"
-                        Visibility="{Binding HasError, Converter={StaticResource VisibleIfNot}}"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
+                        ToolTipService.Placement="Left"
+                        Visibility="{Binding IsExhaled, Converter={StaticResource VisibleIf}}"
                         Margin="10,0">
-                        <iconPacks:PackIconMaterial
-                            Kind="ArrowRightBold" Width="20" Height="20"/>
+                        <Grid>
+                            <iconPacks:PackIconMaterial
+                                Foreground="{Binding ExhaleCountColor, Converter={StaticResource Kb3Fore}}"
+                                Kind="ArrowRightBold" Width="20" Height="20"/>
+                            <iconPacks:PackIconMaterial
+                                Foreground="#FFCC00" Background="#33999999"
+                                ToolTipService.InitialShowDelay="100"
+                                ToolTipService.BetweenShowDelay="0"
+                                ToolTip="This target is read-only"
+                                ToolTipService.Placement="Left"
+                                Visibility="{Binding IsReadOnly, Converter={StaticResource VisibleIf}}"
+                                Kind="Close" Width="20" Height="20"/>
+                        </Grid>
                         <TextBlock
                             Padding="5,0"
                             VerticalAlignment="Center"
+                            Foreground="{Binding ExhaleCountColor, Converter={StaticResource Kb3Fore}}"
                             Text="{Binding RecipientChunkCount}"/>
                     </StackPanel>
                     <StackPanel
                         Orientation="Horizontal" DockPanel.Dock="Right"
-                        Visibility="{Binding HasError, Converter={StaticResource VisibleIfNot}}"
-                        VerticalAlignment="Center"
+                        Visibility="{Binding IsInhaled, Converter={StaticResource VisibleIf}}"
+                        VerticalAlignment="Center" Background="#0000"
                         ToolTip="Number of elements imported from this target"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
+                        ToolTipService.Placement="Left"
                         Margin="10,0">
                         <iconPacks:PackIconMaterial
+                            Foreground="{Binding InhaleCountColor, Converter={StaticResource Kb3Fore}}"
                             Kind="ArrowLeftBold" Width="20" Height="20"/>
                         <TextBlock
                             Padding="5,0"
                             VerticalAlignment="Center"
+                            Foreground="{Binding InhaleCountColor, Converter={StaticResource Kb3Fore}}"
                             Text="{Binding DonorChunkCount}"/>
                     </StackPanel>
                     <StackPanel/>
@@ -96,7 +139,7 @@
                 </StackPanel>
             </DockPanel>
         </Border>
-
+        <!-- Main Content -->
         <GroupBox>
             <GroupBox.Header>
                 <StackPanel Orientation="Horizontal">
@@ -105,87 +148,138 @@
                 </StackPanel>
             </GroupBox.Header>
             <Grid>
-                <ScrollViewer >
-                    <StackPanel Orientation="Vertical">
-                        <Border
-                            BorderThickness="1"
-                            Padding="5"
-                            BorderBrush="{DynamicResource MahApps.Brushes.Accent2}">
-                            <DockPanel>
+                <DockPanel>
+                    <!-- Primary row -->
+                    <Border
+                        DockPanel.Dock="Top"
+                        BorderThickness="1"
+                        Padding="5"
+                        BorderBrush="{DynamicResource MahApps.Brushes.Accent2}">
+                        <DockPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        DockPanel.Dock="Left"
+                                        ToolTipService.InitialShowDelay="100"
+                                        ToolTipService.BetweenShowDelay="0"
+                                        ToolTip="{Binding SetModel.Model.PrimaryFile}">
                                 <iconPacks:PackIconMaterial
                                     Kind="Database" Width="24" Height="24"/>
                                 <TextBlock
-                                    DockPanel.Dock="Left"
-                                    Padding="5,0,0,0"
+                                    Text="Keybag '"
+                                    VerticalAlignment="Center"
+                                    FontSize="18"
+                                    Padding="5,0,0,0"/>
+                                <TextBlock
                                     FontWeight="Bold"
                                     VerticalAlignment="Center"
                                     FontSize="20"
+                                    Foreground="{Binding InhaledCountColor, Converter={StaticResource Kb3Fore}}"
                                     Text="{Binding SetModel.Tag}"/>
-                                <!--<TextBlock
-                                    DockPanel.Dock="Left"
-                                    VerticalAlignment="Center"
-                                    Text=" ("/>
                                 <TextBlock
-                                    DockPanel.Dock="Left"
+                                    Text="'"
                                     VerticalAlignment="Center"
-                                    FontStyle="Italic"
-                                    Text="{Binding SetModel.Model.PrimaryFile}"/>
+                                    FontSize="18"/>
+                            </StackPanel>
+                            <StackPanel
+                                Orientation="Horizontal" DockPanel.Dock="Right"
+                                VerticalAlignment="Center"
+                                Background="#00000000"
+                                Visibility="{Binding IsInhaled, Converter={StaticResource VisibleIf}}"
+                                ToolTip="Number of elements imported from the synchronization targets"
+                                ToolTipService.InitialShowDelay="100"
+                                ToolTipService.BetweenShowDelay="0"
+                                ToolTipService.Placement="Left"
+                                Margin="10,0,96,0">
                                 <TextBlock
-                                    DockPanel.Dock="Left"
+                                    Padding="5,0"
                                     VerticalAlignment="Center"
-                                    Text=")"/>-->
-                                <StackPanel
-                                    Orientation="Horizontal" DockPanel.Dock="Right"
-                                    VerticalAlignment="Center"
-                                    ToolTip="Number of elements imported from the synchronization targets"
-                                    Margin="10,0">
-                                    <TextBlock
-                                        Padding="5,0"
-                                        VerticalAlignment="Center"
-                                        Text="{Binding PrimaryChangedChunkCount}"/>
-                                    <iconPacks:PackIconMaterial
-                                        Kind="ArrowLeftBoldOutline" Width="20" Height="20"/>
-                                </StackPanel>
-                                <StackPanel/>
-                            </DockPanel>
-                        </Border>
-                        <!-- Top Buttons Row -->
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-                            <Button
-                                Padding="5,3" Margin="5,0"
-                                >
-                                <StackPanel Orientation="Horizontal">
-                                    <iconPacks:PackIconMaterial
-                                        Kind="SwapHorizontalBold"
-                                        Padding="2,0" Height="24" Width="24" />
-                                    <TextBlock FontSize="14" Padding="2,2" Text="Synchronize!"/>
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                Padding="5,3" Margin="5,0"
-                                >
-                                <StackPanel Orientation="Horizontal">
-                                    <iconPacks:PackIconMaterial
-                                        Kind="FilePlusOutline"
-                                        Padding="2,0" Height="20" Width="20" />
-                                    <TextBlock FontSize="14" Padding="2,2" Text="New Target ..."/>
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                Padding="5,3" Margin="5,0"
-                                >
-                                <StackPanel Orientation="Horizontal">
-                                    <iconPacks:PackIconMaterial
-                                        Kind="Information"
-                                        Padding="2,0" Height="24" Width="24" />
-                                    <TextBlock FontSize="14" Padding="2,2" Text="Connect Existing ..."/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                        <!-- List of Targets -->
-                        <ItemsControl ItemsSource="{Binding SyncTargets}"/>
-                    </StackPanel>
-                </ScrollViewer>
+                                    Foreground="{Binding InhaledCountColor, Converter={StaticResource Kb3Fore}}"
+                                    Text="{Binding PrimaryChangedChunkCount}"/>
+                                <iconPacks:PackIconMaterial
+                                    Kind="ArrowLeftBoldOutline"
+                                    Foreground="{Binding InhaledCountColor, Converter={StaticResource Kb3Fore}}"
+                                    Width="20" Height="20"/>
+                            </StackPanel>
+                            <StackPanel/>
+                        </DockPanel>
+                    </Border>
+                    <!-- Top Buttons Row -->
+                    <DockPanel
+                        DockPanel.Dock="Top" Margin="0,10,0,10">
+                        <Button
+                            DockPanel.Dock="Left"
+                            Padding="5,3" Margin="5,0"
+                            MinWidth="140"
+                            IsEnabled="{Binding StepEnabled}"
+                            Command="{Binding StepCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial
+                                    Kind="SwapHorizontalBold"
+                                    Padding="2,0" Height="24" Width="24" />
+                                <TextBlock FontSize="14" Padding="2,2"
+                                           Text="{Binding NextStepText}"/>
+                            </StackPanel>
+                        </Button>
+                        <DockPanel
+                            DockPanel.Dock="Left"
+                            Visibility="{Binding HasTargets, Converter={StaticResource VisibleIfNot}}"
+                            VerticalAlignment="Center">
+                            <iconPacks:PackIconMaterial
+                                Kind="AlertOutline" Margin="10,0,10,0"
+                                Foreground="{Binding Source=Warning, Converter={StaticResource Kb3Fore}}"
+                                Padding="0,0" Height="28" Width="28" />
+                            <StackPanel>
+                                <TextBlock
+                                    FontSize="12" Padding="2,0" TextWrapping="Wrap"
+                                    Foreground="{Binding Source=Warning, Converter={StaticResource Kb3Fore}}">
+                                    There are no synchronization targets for this keybag. To get
+                                    started, export this keybag as a new target file (for example
+                                    to a folder synchronized to your favourite cloud storage provider)
+                                </TextBlock>
+                            </StackPanel>
+                        </DockPanel>
+                        <StackPanel/>
+                    </DockPanel>
+                    <!-- List of Targets and add buttons -->
+                    <GroupBox Header="Synchronization Target Files">
+                        <ScrollViewer>
+                            <StackPanel Orientation="Vertical">
+                                <ItemsControl ItemsSource="{Binding SyncTargets}"/>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button
+                                    Grid.Column="1"
+                                    Command="{Binding ExportAsTargetCommand}"
+                                    Padding="5,3" Margin="5,5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <iconPacks:PackIconMaterial
+                                            Kind="FilePlusOutline"
+                                            Padding="2,0" Height="20" Width="20" />
+                                            <TextBlock FontSize="14" Padding="2,2"
+                                           Text="Export as New Target ..."/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button
+                                    Grid.Column="2"
+                                    Command="{Binding ConnectExistingCommand}"
+                                    Padding="5,3" Margin="5,5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <iconPacks:PackIconMaterial
+                                            Kind="Information"
+                                            Padding="2,0" Height="24" Width="24" />
+                                            <TextBlock FontSize="14" Padding="2,2"
+                                           Text="Connect Existing ..."/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </GroupBox>
+                </DockPanel>
             </Grid>
         </GroupBox>
 

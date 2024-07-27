@@ -369,11 +369,17 @@ public class LclKeybag3Tests
       fileId,
       entry1);
 
+    var historyName = Path.ChangeExtension(Path.GetFullPath(fileName), ".kb3his");
     if(File.Exists(fileName))
     {
       File.Delete(fileName);
     }
+    if(File.Exists(historyName))
+    {
+      File.Delete(historyName);
+    }
     Assert.False(File.Exists(fileName));
+    Assert.False(File.Exists(historyName));
 
     var stored1 = chunk1.Serialize(cryptor);
     var stored2 = chunk2.Serialize(cryptor);
@@ -383,16 +389,12 @@ public class LclKeybag3Tests
     keybag.Chunks.PutChunk(stored2);
     keybag.Chunks.PutChunk(stored3);
 
-    using(var trx = new FileWriteTransaction(fileName))
-    {
-      // Use explicit transaction instead of keybag.WriteFull(string)
-      // so we have easy access to the full output path.
-      _outputHelper.WriteLine($"Writing {trx.FinalName}");
-      keybag.WriteFull(trx.Target, cryptor);
-      trx.Commit();
-    }
+    var fullName = Path.GetFullPath(fileName);
+    _outputHelper.WriteLine($"Writing {fullName}");
+    keybag.WriteFull(fullName, cryptor, true);
 
     Assert.True(File.Exists(fileName));
+    Assert.True(File.Exists(historyName));
 
     // now read it back
     _outputHelper.WriteLine($"reading back {fileName}");
