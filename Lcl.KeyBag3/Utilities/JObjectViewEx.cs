@@ -26,6 +26,7 @@ public class JObjectViewEx:
     JObject target) : base(target, null)
   {
     Booleans = new JObjectBooleanView(this, false);
+    Strings = new JObjectNullableStringView(this);
   }
 
   /// <inheritdoc/>
@@ -34,6 +35,7 @@ public class JObjectViewEx:
     : base(targetProvider, null)
   {
     Booleans = new JObjectBooleanView(this, false);
+    Strings = new JObjectNullableStringView(this);
   }
 
   /// <inheritdoc/>
@@ -42,6 +44,7 @@ public class JObjectViewEx:
     : base(other, null)
   {
     Booleans = new JObjectBooleanView(this, false);
+    Strings = new JObjectNullableStringView(this);
   }
 
   /// <inheritdoc/>
@@ -56,6 +59,14 @@ public class JObjectViewEx:
   /// A view on boolean properties in the underlying <see cref="JObject"/>.
   /// </summary>
   public JObjectView<bool> Booleans {
+    get;
+  }
+
+  /// <summary>
+  /// A view on string properties in the underlying <see cref="JObject"/>,
+  /// treating null as a valid value.
+  /// </summary>
+  public JObjectView<string?> Strings {
     get;
   }
 

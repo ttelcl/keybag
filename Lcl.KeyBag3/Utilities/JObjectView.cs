@@ -140,8 +140,7 @@ public abstract class JObjectView<T>: JObjectView
   /// The property name
   /// </param>
   /// <returns></returns>
-  public T this[string key]
-  {
+  public T this[string key] {
     get => this[key, DefaultValue];
     set {
       this[key, DefaultValue] = value;
@@ -179,10 +178,8 @@ public class JObjectBooleanView: JObjectView<bool>
   }
 
   /// <inheritdoc/>
-  public override bool this[string key, bool defaultValue]
-  {
-    get
-    {
+  public override bool this[string key, bool defaultValue] {
+    get {
       if(
         Target.TryGetValue(key, out var value)
         && value != null
@@ -194,5 +191,75 @@ public class JObjectBooleanView: JObjectView<bool>
       return defaultValue;
     }
     set => Target[key] = value;
+  }
+}
+
+
+/// <summary>
+/// A view on a JObject for nullable string value properties
+/// </summary>
+public class JObjectNullableStringView: JObjectView<string?>
+{
+  /// <inheritdoc/>
+  public JObjectNullableStringView(
+    JObject target)
+    : base(target, null)
+  {
+  }
+
+  /// <inheritdoc/>
+  public JObjectNullableStringView(
+    Func<JObject> targetProvider)
+    : base(targetProvider, null)
+  {
+  }
+
+  /// <inheritdoc/>
+  public JObjectNullableStringView(
+    JObjectView other)
+    : base(other, null)
+  {
+  }
+
+  /// <summary>
+  /// Get or set the value of a property as a nullable string.
+  /// Missing values are represented by <paramref name="defaultValue"/>.
+  /// Values explicitly set to null are represented by null.
+  /// </summary>
+  /// <param name="key">
+  /// The property name to find.
+  /// </param>
+  /// <param name="defaultValue">
+  /// The explicit default value to use when the property is not found.
+  /// </param>
+  /// <returns></returns>
+  public override string? this[string key, string? defaultValue] {
+    get {
+      if(Target.TryGetValue(key, out var token) && token != null)
+      {
+        if(
+          token.Type == JTokenType.String
+          && token is JValue jv
+          && jv.Value is string sv)
+        {
+          return sv;
+        }
+        if(token.Type == JTokenType.Null)
+        {
+          return null;
+        }
+      }
+      return defaultValue;
+    }
+    set {
+      if(value == null)
+      {
+        Target[key] = JValue.CreateNull();
+      }
+      else
+      {
+        Target[key] = value;
+      }
+    }
   }
 }

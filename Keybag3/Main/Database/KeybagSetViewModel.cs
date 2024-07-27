@@ -84,6 +84,8 @@ public class KeybagSetViewModel:
       p => KeyKnown
         && KeybagModel != null
         && !KeybagModel.HasUnsavedChunks);
+    ToggleDefaultCommand = new DelegateCommand(
+      p => { ToggleDefault(); });
     Refresh();
   }
 
@@ -108,6 +110,8 @@ public class KeybagSetViewModel:
   public ICommand ShowSyncOverlayCommand { get; }
 
   public ICommand EjectCommand { get; }
+
+  public ICommand ToggleDefaultCommand { get; }
 
   private void BackToDatabase()
   {
@@ -264,8 +268,15 @@ public class KeybagSetViewModel:
             keyDescriptor,
             Tag,
             success => {
-              Refresh();
-              InitKeybagModel();
+              if(success)
+              {
+                Refresh();
+                InitKeybagModel();
+              }
+              else
+              {
+                Owner.AppModel.CurrentView = Owner;
+              }
             })
         );
         return true;
@@ -409,6 +420,35 @@ public class KeybagSetViewModel:
         Refresh();
       }
     }
+  }
+
+  public bool IsDefault {
+    get => _isDefault;
+    internal set {
+      // Only to be called from KeybagDbViewModel.DefaultKeybag::set,
+      // not directly
+      if(SetValueProperty(ref _isDefault, value))
+      {
+        RaisePropertyChanged(nameof(ToggleDefaultIcon));
+      }
+    }
+  }
+  private bool _isDefault;
+
+  public void ToggleDefault()
+  {
+    if(Owner.DefaultKeybagId == Id26)
+    {
+      Owner.SetDefaultKeybag(null);
+    }
+    else
+    {
+      Owner.SetDefaultKeybag(this);
+    }
+  }
+
+  public string ToggleDefaultIcon {
+    get => IsDefault ? "StarOutline" : "Star";
   }
 
   private void Eject()

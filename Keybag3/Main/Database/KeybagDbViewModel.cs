@@ -53,6 +53,8 @@ public class KeybagDbViewModel:
       Model.AppStateStore.Save();
     }
 
+    _defaultKeybagId = Model.AppStateView.Strings[__defaultKeybagKey];
+
     // TEMPORARY
     TestOverlayTestCommand = new DelegateCommand(p => {
       OverlayHost.PushOverlay(new TestOverlayViewModel(OverlayHost));
@@ -137,16 +139,6 @@ public class KeybagDbViewModel:
       kbs => kbs.Tag.Equals(tag, StringComparison.InvariantCultureIgnoreCase));
   }
 
-  public KeybagSetViewModel? SelectedKeybag {
-    get => _selectedKeybag;
-    set {
-      if(SetNullableInstanceProperty(ref _selectedKeybag, value))
-      {
-      }
-    }
-  }
-  private KeybagSetViewModel? _selectedKeybag;
-
   public string Title { get => "Keybag Database"; }
 
   public bool IsEmpty {
@@ -199,6 +191,7 @@ public class KeybagDbViewModel:
     }
     IsEmpty = KeybagSets.Count == 0;
     SortKeybags();
+    UpdateDefaultKeybag();
   }
 
   public KeybagSortOrder SortOrder {
@@ -216,6 +209,69 @@ public class KeybagDbViewModel:
   }
   private KeybagSortOrder _sortOrder = KeybagSortOrder.ByTag;
   private const string __sortOrderKey = "keybag_sortorder";
+
+  public string? DefaultKeybagId {
+    get => _defaultKeybagId;
+    set {
+      if(SetValueProperty(ref _defaultKeybagId, value))
+      {
+        UpdateDefaultKeybag();
+        Model.AppStateView.Strings[__defaultKeybagKey] = value;
+        Model.AppStateStore.Save();
+      }
+    }
+  }
+  private string? _defaultKeybagId = null;
+  private const string __defaultKeybagKey = "default_keybag";
+
+  public KeybagSetViewModel? DefaultKeybag {
+    get => _defaultKeybag;
+    private set {
+      // Must only be called from UpdateDefaultKeybag
+      // To change, set DefaultKeybagId instead or
+      // call SetDefaultKeybag
+      var old = _defaultKeybag;
+      if(SetNullableInstanceProperty(ref _defaultKeybag, value))
+      {
+        if(old!=null)
+        {
+          old.IsDefault = false;
+        }
+        if(value!=null)
+        {
+          value.IsDefault = true;
+        }
+      }
+    }
+  }
+  private KeybagSetViewModel? _defaultKeybag = null;
+
+  public void UpdateDefaultKeybag()
+  {
+    if(DefaultKeybagId != null)
+    {
+      Trace.TraceInformation(
+        $"Updating default keybag being {DefaultKeybagId}");
+      DefaultKeybag = KeybagSets.FirstOrDefault(
+        kbs => kbs.Id26 == DefaultKeybagId);
+      if(DefaultKeybag == null)
+      {
+        Trace.TraceError(
+          $"There is no keybag matching the default keybag ID {DefaultKeybagId}");
+      }
+    }
+    else
+    {
+      Trace.TraceInformation(
+        "Updating default keybag to be none");
+      DefaultKeybag = null;
+    }
+  }
+
+  public void SetDefaultKeybag(KeybagSetViewModel? kbs)
+  {
+    DefaultKeybagId = kbs?.Id26;
+  }
 
   public void SortKeybags()
   {
