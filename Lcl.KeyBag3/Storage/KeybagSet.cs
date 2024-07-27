@@ -215,8 +215,28 @@ public class KeybagSet
     {
       sectionStates = new JObject();
       ViewState["sections"] = sectionStates;
+      sectionStates[sectionName] = true;
       SaveViewState();
       return true;
+    }
+  }
+
+  /// <summary>
+  /// Enumerate the section states as present in the view state
+  /// </summary>
+  public IEnumerable<KeyValuePair<string, bool>> GetSectionStates()
+  { // Currently unused. Initialization is done mostly on demand.
+    if(ViewState["sections"] is JObject sectionStates)
+    {
+      foreach(var kv in sectionStates)
+      {
+        if(kv.Value is JValue jv
+          && jv.Type == JTokenType.Boolean
+          && jv.Value is bool b)
+        {
+          yield return new KeyValuePair<string, bool>(kv.Key, b);
+        }
+      }
     }
   }
 
