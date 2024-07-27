@@ -170,7 +170,8 @@ public partial class App: Application
 
     bc.AddAliases([
         "/Keybag3/Fore/EntryArchived",
-      ], "#999999");
+        "/Keybag3/Fore/Archived",
+      ], "#6688EE");
 
     bc.AddAliases([
         "/Keybag3/Fore/EntryErased",
@@ -178,7 +179,7 @@ public partial class App: Application
 
     bc.AddAliases([
         "/Keybag3/Fore/EntryOutOfScope",
-      ], "#9999DD");
+      ], "#AA99DD");
 
     bc.AddAliases([
         "/Keybag3/Fore/EntrySealed",

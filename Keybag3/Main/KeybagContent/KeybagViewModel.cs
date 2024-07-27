@@ -412,6 +412,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     SelectedEntry?.PostSaveNotification();
     Owner.Refresh();
     UpdateHasUnsavedChunks();
+    RecalculateScope(); // hide those freshly Archived entries
     if(HasUnsavedChunks)
     {
       Trace.TraceError("Error saving keybag (something is still marked as unsaved)");

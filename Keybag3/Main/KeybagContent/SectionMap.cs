@@ -87,8 +87,8 @@ public class SectionMap: ViewModelBase<KeybagViewModel>
 
   public void SyncBoth()
   {
-    Trace.TraceWarning(
-      $"Synchronizing sections ({DateTime.Now:yyyy-MM-dd HH:mm:ss.fff})");
+    //Trace.TraceWarning(
+    //  $"Synchronizing sections ({DateTime.Now:yyyy-MM-dd HH:mm:ss.fff})");
     SyncAllEntries();
     SyncAllSections();
   }

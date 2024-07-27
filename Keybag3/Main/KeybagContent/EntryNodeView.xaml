@@ -33,10 +33,30 @@
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem
+                Header="Archive"
+                Command="{Binding ArchiveCommand}">
+                <MenuItem.Icon>
+                    <iconPacks:PackIconMaterial
+                        Kind="ArchiveArrowDownOutline"
+                        Foreground="{Binding Source=Archived, Converter={StaticResource Kb3Fore}}"
+                        Padding="5,0,0,0" Height="20" Width="25"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem
+                Header="Unarchive"
+                Command="{Binding UnarchiveCommand}">
+                <MenuItem.Icon>
+                    <iconPacks:PackIconMaterial
+                        Kind="ArchiveArrowUpOutline"
+                        Foreground="{Binding Source=OK, Converter={StaticResource Kb3Fore}}"
+                        Padding="5,0,0,0" Height="20" Width="25"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem
                 Header="Break Seal..."
-                Foreground="#EE9944"
+                Foreground="{Binding Source=Warning, Converter={StaticResource Kb3Fore}}"
                 Command="{Binding BreakSealCommand}"
-                Visibility="{Binding IsSealed, Converter={StaticResource BooleanToVisibilityConverter}}">
+                Visibility="{Binding IsSealed, Converter={StaticResource VisibleIf}}">
                 <MenuItem.Icon>
                     <iconPacks:PackIconMaterial
                         Kind="LockAlert"

@@ -60,12 +60,30 @@ public class EntryViewModel:
     });
     EditThisCommand = new DelegateCommand(p => {
       EntryEditViewModel.StartEditEntry(this);
-    }, p => !IsSealed);
+    }, p => !IsSealed && !IsErased && !IsArchived);
     BreakSealCommand = new DelegateCommand(p => {
       BreakSeal();
     }, p => IsSealed);
+    ArchiveCommand = new DelegateCommand(p => {
+      Archive();
+    }, p => CanArchive);
+    UnarchiveCommand = new DelegateCommand(p => {
+      Unarchive();
+    }, p => CanUnarchive);
     RecalculateVisibleTags();
   }
+
+  public ICommand SelectThisCommand { get; }
+
+  public ICommand AddChildCommand { get; }
+
+  public ICommand EditThisCommand { get; }
+
+  public ICommand BreakSealCommand { get; }
+
+  public ICommand ArchiveCommand { get; }
+
+  public ICommand UnarchiveCommand { get; }
 
   public ChunkSpace<EntryViewModel> EntrySpace { get => Owner.EntrySpace; }
 
@@ -122,14 +140,6 @@ public class EntryViewModel:
     Parent = EntrySpace.Find(ParentId);
   }
 
-  public ICommand SelectThisCommand { get; }
-
-  public ICommand AddChildCommand { get; }
-
-  public ICommand EditThisCommand { get; }
-
-  public ICommand BreakSealCommand { get; }
-
   public KeybagViewModel Owner { get; }
 
   public ContentChunk Chunk { get; }
@@ -171,6 +181,8 @@ public class EntryViewModel:
         RaisePropertyChanged(nameof(IsSealed));
         RaisePropertyChanged(nameof(ForegroundForFlags));
         RaisePropertyChanged(nameof(EntryColor));
+        RaisePropertyChanged(nameof(CanArchive));
+        RaisePropertyChanged(nameof(CanUnarchive));
         CheckNeedsPersisting();
         CheckChanged();
       }
@@ -207,6 +219,14 @@ public class EntryViewModel:
   public bool IsArchived { get => Chunk.IsArchived(); }
 
   public bool IsSealed { get => Chunk.IsSealed(); }
+
+  public bool CanArchive {
+    get => !IsSealed && !IsArchived && !IsErased;
+  }
+
+  public bool CanUnarchive {
+    get => !IsSealed && IsArchived && !IsErased;
+  }
 
   public ObservableCollection<EntryViewModel> AncestorTrail { get; }
 
@@ -483,7 +503,7 @@ public class EntryViewModel:
     }
   }
 
-  public void BreakSeal()
+  private void BreakSeal()
   {
     if(IsSealed)
     {
@@ -517,6 +537,24 @@ public class EntryViewModel:
         Flags &= ~ChunkFlags.Sealed;
         RecalculateVisibleTags();
       }
+    }
+  }
+
+  private void Archive()
+  {
+    if(!IsSealed && !IsArchived && !IsErased)
+    {
+      Flags |= ChunkFlags.Archived;
+      // Owner.RecalculateScope(); // postpone until Save because UX would suck
+    }
+  }
+
+  private void Unarchive()
+  {
+    if(!IsSealed && IsArchived && !IsErased)
+    {
+      Flags &= ~ChunkFlags.Archived;
+      // Owner.RecalculateScope();
     }
   }
 
