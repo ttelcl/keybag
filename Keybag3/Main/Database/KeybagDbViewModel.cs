@@ -40,6 +40,19 @@ public class KeybagDbViewModel:
 
     OverlayHost = appModel;
 
+    var orderSettings = Model.AppStateView.GetEnumView(
+      KeybagSortOrder.ByTag);
+    if(orderSettings.IsPropertyKnown(__sortOrderKey))
+    {
+      _sortOrder = orderSettings[__sortOrderKey];
+    }
+    else
+    { 
+      _sortOrder = orderSettings.DefaultValue;
+      orderSettings[__sortOrderKey] = _sortOrder;
+      Model.AppStateStore.Save();
+    }
+
     // TEMPORARY
     TestOverlayTestCommand = new DelegateCommand(p => {
       OverlayHost.PushOverlay(new TestOverlayViewModel(OverlayHost));
@@ -194,10 +207,15 @@ public class KeybagDbViewModel:
       if(SetValueProperty(ref _sortOrder, value))
       {
         SortKeybags();
+        var settingView = Model.AppStateView.GetEnumView(
+          KeybagSortOrder.ByTag);
+        settingView[__sortOrderKey] = value;
+        Model.AppStateStore.Save();
       }
     }
   }
   private KeybagSortOrder _sortOrder = KeybagSortOrder.ByTag;
+  private const string __sortOrderKey = "keybag_sortorder";
 
   public void SortKeybags()
   {

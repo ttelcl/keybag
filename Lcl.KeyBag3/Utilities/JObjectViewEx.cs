@@ -59,6 +59,21 @@ public class JObjectViewEx:
     get;
   }
 
+  /// <summary>
+  /// Return a new view on enum properties of type <typeparamref name="T"/>
+  /// in the underlying <see cref="JObject"/>.
+  /// </summary>
+  /// <typeparam name="T">
+  /// The enum type
+  /// </typeparam>
+  /// <param name="defaultValue">
+  /// The value returned for missing or invalid properties
+  /// </param>
+  public JObjectView<T> GetEnumView<T>(
+    T defaultValue) where T : struct, Enum
+  {
+    return new JObjectEnumView<T>(this, defaultValue);
+  }
 
   // --
 }

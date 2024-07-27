@@ -10,11 +10,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+
 using Lcl.KeyBag3.Crypto;
 using Lcl.KeyBag3.Model;
 using Lcl.KeyBag3.Utilities;
-
-using Newtonsoft.Json;
 
 namespace Lcl.KeyBag3.Storage;
 
@@ -38,6 +38,9 @@ public class KeybagDb
     {
       Directory.CreateDirectory(DbFolder);
     }
+    AppStateStore = new ViewStateStore(
+      Path.Combine(DbFolder, "keybag3.appstate.json"));
+    AppStateView = AppStateStore.CreateView();
     Reload();
   }
 
@@ -46,6 +49,16 @@ public class KeybagDb
   /// Defaults to <see cref="KeybagPrimaryFolder"/>.
   /// </summary>
   public string DbFolder { get; }
+
+  /// <summary>
+  /// The application state store for this keybag database
+  /// </summary>
+  public ViewStateStore AppStateStore { get; }
+
+  /// <summary>
+  /// A view on the application state
+  /// </summary>
+  public JObjectViewEx AppStateView { get; }
 
   /// <summary>
   /// The collection of all keybagsets
@@ -238,6 +251,7 @@ public class KeybagDb
 
   /// <summary>
   /// The default local data folder for KB3 data
+  /// (<c><em>{LocalApplicationData}</em>\KeyBag3</c>)
   /// </summary>
   public static string KeybagPrimaryFolder { get; } =
     Path.Combine(

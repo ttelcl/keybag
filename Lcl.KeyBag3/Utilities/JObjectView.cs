@@ -61,6 +61,17 @@ public class JObjectView
   /// </summary>
   public JObject Target => _directTarget ?? _indirectTarget!();
 
+  /// <summary>
+  /// Test if the target JObject contains a property with the given key.
+  /// No type checks on the value are done.
+  /// </summary>
+  /// <param name="key"></param>
+  /// <returns></returns>
+  public bool IsPropertyKnown(string key)
+  {
+    return Target.ContainsKey(key);
+  }
+
 }
 
 /// <summary>

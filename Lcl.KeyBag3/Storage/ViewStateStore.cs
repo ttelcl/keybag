@@ -47,6 +47,17 @@ public class ViewStateStore
   public JObject ViewState { get; private set; }
 
   /// <summary>
+  /// Create a new view on the view state
+  /// (tracking changes in <see cref="ViewState"/> even
+  /// if that is replaced)
+  /// </summary>
+  /// <returns></returns>
+  public JObjectViewEx CreateView()
+  {
+    return new JObjectViewEx(() => ViewState);
+  }
+
+  /// <summary>
   /// Get or set a value in the view state, using
   /// <see cref="JObject"/> semantics (i.e. null if not found).
   /// </summary>
@@ -88,6 +99,7 @@ public class ViewStateStore
         writer.WriteLine(
           JsonConvert.SerializeObject(ViewState, Formatting.Indented));
       }
+      trx.Commit();
     }
   }
 

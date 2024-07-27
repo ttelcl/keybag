@@ -80,7 +80,7 @@ public class KeybagSet
       Owner.DbFolder,
       $"{FileId.ToBase26()}.viewstate.json");
     ViewState = new ViewStateStore(viewStateFile);
-    ViewStateView = new JObjectViewEx(() => ViewState.ViewState);
+    ViewStateView = ViewState.CreateView();
     // Make sure the primary file is not a sync target by silently
     // dropping such occurrences
     var primaryFid = FileIdentifier.FromPath(PrimaryFile);
