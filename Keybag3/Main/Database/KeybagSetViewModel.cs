@@ -158,6 +158,7 @@ public class KeybagSetViewModel:
   /// </summary>
   public void Save()
   {
+    // This is NOT the normal save, but only used at app shutdown
     if(SavePending)
     {
       KeybagModel?.Save();
@@ -217,6 +218,7 @@ public class KeybagSetViewModel:
     set {
       if(SetValueProperty(ref _editId, value))
       {
+        RaisePropertyChanged(nameof(LastChanged));
         if(Owner.SortOrder == KeybagSortOrder.ByLastModified)
         {
           Owner.SortKeybags();

@@ -264,8 +264,18 @@ public class EntryViewModel:
       Trace.TraceWarning(
         $"Key not found for bag '{Owner.Owner.Tag}'");
     }
+    RaisePropertyChanged(nameof(EditId));
+    RaisePropertyChanged(nameof(EditId26));
+    RaisePropertyChanged(nameof(Modified));
 
     Owner.UpdateHasUnsavedChunks();
+  }
+
+  public void PostSaveNotification()
+  {
+    RaisePropertyChanged(nameof(EditId));
+    RaisePropertyChanged(nameof(EditId26));
+    RaisePropertyChanged(nameof(Modified));
   }
 
   public EntryViewModel? Parent {

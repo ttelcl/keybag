@@ -190,8 +190,8 @@ public class KeybagDbViewModel:
       KeybagSets.Add(vm);
     }
     IsEmpty = KeybagSets.Count == 0;
-    SortKeybags();
     UpdateDefaultKeybag();
+    SortKeybags();
   }
 
   public KeybagSortOrder SortOrder {
@@ -271,6 +271,7 @@ public class KeybagDbViewModel:
   public void SetDefaultKeybag(KeybagSetViewModel? kbs)
   {
     DefaultKeybagId = kbs?.Id26;
+    SortKeybags();
   }
 
   public void SortKeybags()
@@ -286,6 +287,18 @@ public class KeybagDbViewModel:
       case KeybagSortOrder.ByLastModified:
         target.Sort((a, b) => -a.EditId.Value.CompareTo(b.EditId.Value));
         break;
+    }
+    // Move default keybag (if any) to top
+    if(DefaultKeybagId != null)
+    {
+      var defIndex = target.FindIndex(
+        kbs => kbs.Id26 == DefaultKeybagId);
+      if(defIndex >= 0)
+      {
+        var defKbs = target[defIndex];
+        target.RemoveAt(defIndex);
+        target.Insert(0, defKbs);
+      }
     }
     var inOrder = target.SequenceEqual(KeybagSets);
     if(!inOrder)

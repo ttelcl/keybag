@@ -409,6 +409,8 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     }
     var primaryFile = Owner.Model.PrimaryFile;
     RawKeybag.WriteFull(primaryFile, key, RawHistory);
+    SelectedEntry?.PostSaveNotification();
+    Owner.Refresh();
     UpdateHasUnsavedChunks();
     if(HasUnsavedChunks)
     {
