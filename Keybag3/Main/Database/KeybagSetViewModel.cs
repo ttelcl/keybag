@@ -165,7 +165,7 @@ public class KeybagSetViewModel:
     }
   }
 
-  private void ViewThisSet()
+  public void ViewThisSet()
   {
     ShowingContent = true; // includes InitKeybagModel
     Owner.AppModel.CurrentView = this;

@@ -29,7 +29,7 @@
                         <iconPacks:PackIconMaterial 
                             Kind="Database"
                             Padding="2,0" Height="24" Width="24" />
-                        <!--<TextBlock FontSize="14" Padding="2,2" Text="Back to Keybags"/>-->
+                        <TextBlock FontSize="14" Padding="5,2" Text="Back"/>
                     </StackPanel>
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding TryUnlockCommand}"
