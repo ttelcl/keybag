@@ -66,6 +66,8 @@
             BorderThickness="1"
             Padding="2,0"
             MinHeight="10"
+            ToolTipService.InitialShowDelay="100"
+            ToolTipService.BetweenShowDelay="0"
             ToolTip="Create Child Entry"
             >
             <iconPacks:PackIconMaterial

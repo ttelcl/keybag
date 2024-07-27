@@ -20,6 +20,8 @@
             Background="{DynamicResource MahApps.Brushes.Accent4}">
             <StackPanel Orientation="Horizontal">
                 <Button Padding="5,3" Margin="5,2" Command="{Binding NewKeybagCommand}"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Create a new Keybag">
                     <StackPanel Orientation="Horizontal">
                         <iconPacks:PackIconMaterial Kind="DatabasePlus" Padding="2,0"
@@ -28,6 +30,8 @@
                     </StackPanel>
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding ImportConnectCommand}"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Import an existing Keybag file into a new or existing Keybag set">
                     <StackPanel Orientation="Horizontal">
                         <iconPacks:PackIconMaterial Kind="DatabaseImport" Padding="2,0"
@@ -86,6 +90,8 @@
                                     <RadioButton
                                         Padding="4,4,4,4" Margin="8,0,0,0"
                                         ToolTip="Sort keybags by name"
+                                        ToolTipService.InitialShowDelay="100"
+                                        ToolTipService.BetweenShowDelay="0"
                                         Background="{DynamicResource MahApps.Brushes.Accent4}"
                                         IsChecked="{Binding SortOrder, Converter={StaticResource ValueIs},
                                             ConverterParameter={x:Static local:KeybagSortOrder.ByTag}}">
@@ -96,6 +102,8 @@
                                     <RadioButton
                                         Padding="4,4" Margin="0,0"
                                         ToolTip="Sort keybags most recent first"
+                                        ToolTipService.InitialShowDelay="100"
+                                        ToolTipService.BetweenShowDelay="0"
                                         Background="{DynamicResource MahApps.Brushes.Accent4}"
                                         IsChecked="{Binding SortOrder, Converter={StaticResource ValueIs},
                                             ConverterParameter={x:Static local:KeybagSortOrder.ByLastModified}}">

@@ -43,12 +43,16 @@
                     Grid.Row="0" Grid.Column="0" Height="20" Width="20"
                     Margin="15,0,5,5" VerticalAlignment="Bottom"
                     ToolTip="{Binding LockStatus}"
+                    ToolTipService.InitialShowDelay="100"
+                    ToolTipService.BetweenShowDelay="0"
                     Kind="{Binding LockIcon}"
                     Foreground="{Binding LockStatus, Converter={StaticResource Kb3}, ConverterParameter=Fore}"/>
                 <iconPacks:PackIconMaterial
                     Foreground="#CCCC00"
                     Kind="Star"
                     ToolTip="Your default (startup) keybag"
+                    ToolTipService.InitialShowDelay="100"
+                    ToolTipService.BetweenShowDelay="0"
                     Visibility="{Binding IsDefault, Converter={StaticResource VisibleIf}}"
                     Margin="0,0,10,5" VerticalAlignment="Bottom"
                     Height="20" Width="20" />
@@ -64,6 +68,8 @@
             <Button
                 Grid.Row="0" Grid.Column="2" Command="{Binding ViewSetCommand}"
                 Padding="20,0" Margin="10,0"
+                ToolTipService.InitialShowDelay="100"
+                ToolTipService.BetweenShowDelay="0"
                 ToolTip="Open / View / Manage this Keybag">
                 <StackPanel Orientation="Horizontal">
                     <iconPacks:PackIconMaterial

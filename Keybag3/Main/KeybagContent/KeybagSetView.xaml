@@ -21,6 +21,8 @@
             Background="{DynamicResource MahApps.Brushes.Accent4}">
             <DockPanel>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding ViewDatabaseCommand}"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Back to the keybag overview">
                     <StackPanel Orientation="Horizontal">
                         <iconPacks:PackIconMaterial 
@@ -33,6 +35,8 @@
                     </StackPanel>
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding TryUnlockCommand}"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Enter passphrase for this keybag"
                         Visibility="{Binding KeyKnown,
                             Converter={StaticResource VisibleIfString},
@@ -47,6 +51,8 @@
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding ToggleContentCommand}"
                         MinWidth="80"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Show or hide content"
                         Visibility="{Binding KeyKnown,
                             Converter={StaticResource VisibleIfString},
@@ -61,7 +67,9 @@
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding ShowSyncOverlayCommand}"
                         MinWidth="80"
-                        ToolTip="Show the synchronization centre for this keybag"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
+                        ToolTip="Show the synchronization view for this keybag"
                         Visibility="{Binding KeyKnownAndShowing,
                             Converter={StaticResource VisibleIfString},
                             ConverterParameter=True}"
@@ -75,6 +83,8 @@
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding SaveContentCommand}"
                         MinWidth="80"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Save changes to this keybag"
                         Visibility="{Binding KeyKnownAndShowing,
                             Converter={StaticResource VisibleIfString},
@@ -92,6 +102,8 @@
                 </Button>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding DiscardCommand}"
                         MinWidth="80"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTip="Discard changes to this keybag"
                         Visibility="{Binding KeyKnownAndShowing,
                             Converter={StaticResource VisibleIfString},
@@ -132,6 +144,8 @@
                             </MenuItem>-->
                             <MenuItem
                                 ToolTip="Close this keybag and forget the key"
+                                ToolTipService.InitialShowDelay="100"
+                                ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.ShowOnDisabled="True"
                                 Command="{Binding EjectCommand}"
                                 Header="Unload">

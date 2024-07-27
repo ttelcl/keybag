@@ -73,6 +73,8 @@
                     Grid.Row="0" Grid.Column="1" Margin="0,5,0,5"
                     FontSize="14"
                     ToolTip="The label for this entry. Keep it short."
+                    ToolTipService.InitialShowDelay="100"
+                    ToolTipService.BetweenShowDelay="0"
                     mah:TextBoxHelper.Watermark="Entry Label"
                     Text="{Binding Label, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     BorderBrush="{Binding LabelStatus, Converter={StaticResource Kb3Fore}}"
@@ -101,6 +103,8 @@
                     mah:TextBoxHelper.Watermark="Space separated tags"
                     TextWrapping="Wrap"
                     ToolTip="The space separated tags for this entry (used as search terms)"
+                    ToolTipService.InitialShowDelay="100"
+                    ToolTipService.BetweenShowDelay="0"
                     Text="{Binding Tags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     BorderBrush="{Binding TagsStatus, Converter={StaticResource Kb3Fore}}"
                     utils:FocusUtil.AdvancesByEnterKey="True"/>

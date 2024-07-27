@@ -22,6 +22,8 @@
     Icon="pack://application:,,,/Keybag3;component/assets/three-keys-256.ico"
     d:DataContext="{d:DesignInstance local:MainViewModel, IsDesignTimeCreatable=False}"
     Loaded="MetroWindow_Loaded">
+    <mah:MetroWindow.Resources>
+    </mah:MetroWindow.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" IsEnabled="{Binding NoOverlay}">

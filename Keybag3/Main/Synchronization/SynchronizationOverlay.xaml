@@ -51,6 +51,9 @@
                         Kind="Star" Width="24" Height="24" DockPanel.Dock="Left"
                         Padding="10,0,0,0"
                         VerticalAlignment="Center"
+                        ToolTip="Has unsaved changes"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         Visibility="{Binding HasUnsavedChanges, Converter={StaticResource VisibleIf}}"
                         Foreground="{Binding Source=Changed, Converter={StaticResource Kb3Fore}}"
                         />
@@ -64,7 +67,10 @@
                     <StackPanel
                         Orientation="Horizontal" DockPanel.Dock="Right"
                         VerticalAlignment="Center"
+                        Background="#00000000"
                         ToolTip="Number of elements exported to this target"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTipService.Placement="Left"
                         Visibility="{Binding IsExhaled, Converter={StaticResource VisibleIf}}"
                         Margin="10,0">
@@ -74,6 +80,8 @@
                                 Kind="ArrowRightBold" Width="20" Height="20"/>
                             <iconPacks:PackIconMaterial
                                 Foreground="#FFCC00" Background="#33999999"
+                                ToolTipService.InitialShowDelay="100"
+                                ToolTipService.BetweenShowDelay="0"
                                 ToolTip="This target is read-only"
                                 ToolTipService.Placement="Left"
                                 Visibility="{Binding IsReadOnly, Converter={StaticResource VisibleIf}}"
@@ -88,8 +96,10 @@
                     <StackPanel
                         Orientation="Horizontal" DockPanel.Dock="Right"
                         Visibility="{Binding IsInhaled, Converter={StaticResource VisibleIf}}"
-                        VerticalAlignment="Center"
+                        VerticalAlignment="Center" Background="#0000"
                         ToolTip="Number of elements imported from this target"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTipService.BetweenShowDelay="0"
                         ToolTipService.Placement="Left"
                         Margin="10,0">
                         <iconPacks:PackIconMaterial
@@ -148,6 +158,8 @@
                         <DockPanel>
                             <StackPanel Orientation="Horizontal"
                                         DockPanel.Dock="Left"
+                                        ToolTipService.InitialShowDelay="100"
+                                        ToolTipService.BetweenShowDelay="0"
                                         ToolTip="{Binding SetModel.Model.PrimaryFile}">
                                 <iconPacks:PackIconMaterial
                                     Kind="Database" Width="24" Height="24"/>
@@ -170,8 +182,11 @@
                             <StackPanel
                                 Orientation="Horizontal" DockPanel.Dock="Right"
                                 VerticalAlignment="Center"
+                                Background="#00000000"
                                 Visibility="{Binding IsInhaled, Converter={StaticResource VisibleIf}}"
                                 ToolTip="Number of elements imported from the synchronization targets"
+                                ToolTipService.InitialShowDelay="100"
+                                ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.Placement="Left"
                                 Margin="10,0,96,0">
                                 <TextBlock
@@ -200,8 +215,6 @@
                                 <iconPacks:PackIconMaterial
                                     Kind="SwapHorizontalBold"
                                     Padding="2,0" Height="24" Width="24" />
-                                <!--<TextBlock FontSize="14" Padding="2,2"
-                                           Text="Next Step: "/>-->
                                 <TextBlock FontSize="14" Padding="2,2"
                                            Text="{Binding NextStepText}"/>
                             </StackPanel>

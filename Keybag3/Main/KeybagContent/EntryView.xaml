@@ -84,16 +84,22 @@
                         <!-- Status Icons -->
                         <iconPacks:PackIconMaterial
                             Kind="DeleteForever" ToolTip="This entry no longer exists ('ghost' mode)"
+                            ToolTipService.InitialShowDelay="100"
+                            ToolTipService.BetweenShowDelay="0"
                             Foreground="{Binding Source=Error, Converter={StaticResource Kb3Fore}}"
                             Visibility="{Binding IsErased, Converter={StaticResource BooleanToVisibilityConverter}}"
                             Padding="2,0" Margin="4,0" VerticalAlignment="Center" Height="24" Width="24"/>
                         <iconPacks:PackIconMaterial
                             Kind="ArchiveEye" ToolTip="This entry has been archived and is normally hidden"
+                            ToolTipService.InitialShowDelay="100"
+                            ToolTipService.BetweenShowDelay="0"
                             Foreground="{Binding Source=Warning, Converter={StaticResource Kb3Fore}}"
                             Visibility="{Binding IsArchived, Converter={StaticResource BooleanToVisibilityConverter}}"
                             Padding="2,0" Margin="4,0" VerticalAlignment="Center" Height="24" Width="24" />
                         <iconPacks:PackIconMaterial
                             Kind="LockAlert" ToolTip="This entry is Sealed or Locked: edits may be overwritten by external apps."
+                            ToolTipService.InitialShowDelay="100"
+                            ToolTipService.BetweenShowDelay="0"
                             Foreground="#EE9944"
                             Visibility="{Binding IsSealed, Converter={StaticResource BooleanToVisibilityConverter}}"
                             Padding="2,0" Margin="4,0" VerticalAlignment="Center" Height="24" Width="24" />
