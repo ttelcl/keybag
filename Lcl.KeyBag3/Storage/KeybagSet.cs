@@ -74,10 +74,10 @@ public class KeybagSet
     }
     DefaultShortName = tag + ".kb3";
     PrimaryFile = Path.Combine(
-      KeybagDb.KeybagPrimaryFolder,
+      Owner.DbFolder,
       $"{Tag}.{FileId.ToBase26()}.primary.kb3");
     var viewStateFile = Path.Combine(
-      KeybagDb.KeybagPrimaryFolder,
+      Owner.DbFolder,
       $"{FileId.ToBase26()}.viewstate.json");
     ViewState = new ViewStateStore(viewStateFile);
     ViewStateView = new JObjectViewEx(() => ViewState.ViewState);
@@ -464,7 +464,7 @@ public class KeybagSet
   public void Save()
   {
     var descriptor = ToDescriptor();
-    var metaName = KeybagDb.GetMetaName(descriptor.FileId);
+    var metaName = Owner.GetMetaName(descriptor.FileId);
     var json = JsonConvert.SerializeObject(descriptor, Formatting.Indented);
     using(var trx = new FileWriteTransaction(metaName))
     {
