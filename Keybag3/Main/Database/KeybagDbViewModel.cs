@@ -197,7 +197,7 @@ public class KeybagDbViewModel:
       }
     }
   }
-  private KeybagSortOrder _sortOrder = KeybagSortOrder.ByLastModified;
+  private KeybagSortOrder _sortOrder = KeybagSortOrder.ByTag;
 
   public void SortKeybags()
   {

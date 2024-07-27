@@ -76,17 +76,11 @@ public class KeybagSet
     PrimaryFile = Path.Combine(
       KeybagDb.KeybagPrimaryFolder,
       $"{Tag}.{FileId.ToBase26()}.primary.kb3");
-    ViewStateFile = Path.Combine(
+    var viewStateFile = Path.Combine(
       KeybagDb.KeybagPrimaryFolder,
       $"{FileId.ToBase26()}.viewstate.json");
-    if(File.Exists(ViewStateFile))
-    {
-      ViewState = JObject.Parse(File.ReadAllText(ViewStateFile));
-    }
-    else
-    {
-      ViewState = new JObject();
-    }
+    ViewState = new ViewStateStore(viewStateFile);
+    ViewStateView = new JObjectViewEx(() => ViewState.ViewState);
     // Make sure the primary file is not a sync target by silently
     // dropping such occurrences
     var primaryFid = FileIdentifier.FromPath(PrimaryFile);
@@ -166,28 +160,25 @@ public class KeybagSet
   /// <summary>
   /// The location of the view state file for this keybag
   /// </summary>
-  public string ViewStateFile { get; }
+  public string ViewStateFile { get => ViewState.StoreFile; }
 
   /// <summary>
   /// The persisted view state for this keybag on this computer.
   /// This is losely typed to improve forward and backward compatibility.
   /// </summary>
-  public JObject ViewState { get; }
+  public ViewStateStore ViewState { get; }
+
+  /// <summary>
+  /// A view on the view state.
+  /// </summary>
+  public JObjectViewEx ViewStateView { get; }
 
   /// <summary>
   /// Save the view state to the view state file
   /// </summary>
   public void SaveViewState()
   {
-    using(var trx = new FileWriteTransaction(ViewStateFile))
-    {
-      using(var writer = new StreamWriter(trx.Target))
-      {
-        writer.WriteLine(
-          JsonConvert.SerializeObject(ViewState, Formatting.Indented));
-      }
-      trx.Commit();
-    }
+    ViewState.Save();
   }
 
   /// <summary>
