@@ -31,27 +31,45 @@
             <ColumnDefinition Width="2*" MaxWidth="360" MinWidth="260"/>
             <ColumnDefinition Width="4*"/>
         </Grid.ColumnDefinitions>
-        <!-- Column for the Autohide timer -->
-        <Border
+        <!-- Column for the Autohide timer - overlays -->
+        <Grid
             Grid.Column="0"
-            BorderThickness="1" CornerRadius="5" Margin="3,3"
-            BorderBrush="{DynamicResource MahApps.Brushes.Accent2}"
-            MinWidth="8"
+            Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
             ToolTipService.InitialShowDelay="100"
             ToolTipService.BetweenShowDelay="0"
             ToolTip="Autohide timer progress">
+        </Grid>
+        <Border
+            Grid.Column="0"
+            BorderThickness="0" CornerRadius="5" Margin="3,3"
+            ToolTipService.InitialShowDelay="100"
+            ToolTipService.BetweenShowDelay="0"
+            ToolTip="Autohide timer progress"
+            MinWidth="8">
             <Border.Background>
                 <LinearGradientBrush>
-                    <!--<GradientStop Offset="0" Color="{DynamicResource MahApps.Colors.Accent3}" />
-                    <GradientStop Offset="0.5" Color="{DynamicResource MahApps.Colors.Highlight}" />-->
-                    <!-- #FF008A00 -->
-                    <GradientStop Offset="0" Color="#77448A44" />
+                    <GradientStop Offset="0" Color="#FF448A44" />
                     <GradientStop Offset="0.5" Color="#FF008A00" />
-                    <GradientStop Offset="0.7" Color="#CCFFFF00" />
-                    <GradientStop Offset="0.9" Color="#CCFF0000" />
+                    <GradientStop Offset="0.7" Color="#FFCCCC00" />
+                    <GradientStop Offset="0.9" Color="#FFCC0000" />
                 </LinearGradientBrush>
             </Border.Background>
         </Border>
+        <Grid
+            ToolTipService.InitialShowDelay="100"
+            ToolTipService.BetweenShowDelay="0"
+            ToolTip="Autohide timer progress">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="{Binding TimerTop}"/>
+                <RowDefinition Height="{Binding TimerBottom}"/>
+            </Grid.RowDefinitions>
+            <Border
+                Grid.Row="1"
+                Opacity="0.8"
+                Background="{DynamicResource MahApps.Brushes.ThemeBackground}">
+                
+            </Border>
+        </Grid>
         <!-- Left column -->
         <Grid Grid.Column="1" Style="{DynamicResource Blurrable}">
             <Grid.Resources>

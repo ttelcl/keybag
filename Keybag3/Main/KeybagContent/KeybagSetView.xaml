@@ -49,22 +49,34 @@
                         <TextBlock FontSize="14" Padding="2,2" Text="Unlock"/>
                     </StackPanel>
                 </Button>
-                <Button Padding="5,3" Margin="5,2" Command="{Binding ToggleContentCommand}"
-                        MinWidth="80"
-                        ToolTipService.InitialShowDelay="100"
-                        ToolTipService.BetweenShowDelay="0"
-                        ToolTip="Show or hide content"
+                <Grid
+                    ToolTipService.InitialShowDelay="100"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTip="Show or hide content"
+                    Margin="5,2" MinWidth="100">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="#3300FF00">
+                    </Border>
+                    <Border Grid.Column="1" Background="#33FF0000">
+                    </Border>
+                    <Button Padding="5,3" Grid.ColumnSpan="2"
+                            Background="Transparent"
+                        Command="{Binding ToggleContentCommand}"
                         Visibility="{Binding KeyKnown,
                             Converter={StaticResource VisibleIfString},
                             ConverterParameter=True}"
                         ToolTipService.ShowOnDisabled="True">
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial
                             Kind="{Binding ShowIcon}" Padding="2,0"
                             Height="24" Width="24" />
-                        <TextBlock FontSize="14" Padding="2,2" Text="{Binding ShowText}"/>
-                    </StackPanel>
-                </Button>
+                            <TextBlock FontSize="14" Padding="2,2" Text="{Binding ShowText}"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
                 <Button Padding="5,3" Margin="5,2" Command="{Binding ShowSyncOverlayCommand}"
                         MinWidth="80"
                         ToolTipService.InitialShowDelay="100"
