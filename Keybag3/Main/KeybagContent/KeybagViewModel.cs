@@ -412,6 +412,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
     SelectedEntry?.PostSaveNotification();
     Owner.Refresh();
     UpdateHasUnsavedChunks();
+    RecalculateScope(); // hide those freshly Archived entries
     if(HasUnsavedChunks)
     {
       Trace.TraceError("Error saving keybag (something is still marked as unsaved)");
@@ -625,6 +626,41 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
       $"Search result applied in {elapsed.TotalMilliseconds} ms. " +
       $"{Matches.ChunkIds.Count} matches. {expansionSet.ChunkIds.Count} expands");
   }
+
+  /// <summary>
+  /// A value between 0.0 and 1.0 indicating the progress of the 
+  /// auto-hide timer.
+  /// </summary>
+  public double TimerProgress {
+    get => _timerProgress;
+    set {
+      var value2 = value;
+      if(value2 < 0.0)
+      {
+        value2 = 0.0;
+      }
+      else if(value2 > 1.0)
+      {
+        value2 = 1.0;
+      }
+      if(SetValueProperty(ref _timerProgress, value2))
+      {
+        RaisePropertyChanged(nameof(TimerTop));
+        RaisePropertyChanged(nameof(TimerBottom));
+      }
+    }
+  }
+  private double _timerProgress = 0.42;
+
+  public GridLength TimerTop {
+    get => new(1.0 + _timerProgress*100.0, GridUnitType.Star);
+  }
+
+  public GridLength TimerBottom {
+    get => new(1.0 + (1.0-_timerProgress)*100.0, GridUnitType.Star);
+  }
+
+  //private GridLength _timerProgress = new GridLength(1, GridUnitType.Star);
 
   // --
 }
