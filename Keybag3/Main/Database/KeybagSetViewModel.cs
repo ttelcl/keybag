@@ -21,6 +21,8 @@ using Lcl.KeyBag3.Model;
 using Keybag3.Main.KeybagContent;
 using Keybag3.Main.Synchronization;
 using Keybag3.WpfUtilities;
+using Keybag3.Main.Support;
+using Keybag3.MessageUtilities;
 
 namespace Keybag3.Main.Database;
 
@@ -31,7 +33,8 @@ namespace Keybag3.Main.Database;
 /// locked or unlocked).
 /// </summary>
 public class KeybagSetViewModel:
-  ViewModelBase<KeybagSet>, IRefreshable, IHasViewTitle
+  ViewModelBase<KeybagSet>, IRefreshable, IHasViewTitle, IHasMessageHub,
+  IKnowDbModel, IKnowAppModel
 {
   public KeybagSetViewModel(
     KeybagDbViewModel owner,
@@ -39,6 +42,7 @@ public class KeybagSetViewModel:
     : base(kbset)
   {
     Owner = owner;
+    MessageHub = new MessageHub();
     TryUnlockCommand = new DelegateCommand(
       p => { TryStartPassphraseOverlay(); },
       p => !KeyKnown);
@@ -86,6 +90,16 @@ public class KeybagSetViewModel:
         && !KeybagModel.HasUnsavedChunks);
     ToggleDefaultCommand = new DelegateCommand(
       p => { ToggleDefault(); });
+
+    _onAutoHideStateChanged = AppModel.Subscribe<TimerViewModel>(
+      TimerViewModel.AutoHideStateChanged,
+      OnAutoHideStateChanged,
+      true);
+    _onAutoHideProgressChanged = AppModel.Subscribe<TimerViewModel>(
+      TimerViewModel.AutoHideProgressChanged,
+      OnAutoHideProgressChanged,
+      true);
+
     Refresh();
   }
 
@@ -112,6 +126,8 @@ public class KeybagSetViewModel:
   public ICommand EjectCommand { get; }
 
   public ICommand ToggleDefaultCommand { get; }
+
+  public MessageHub MessageHub { get; }
 
   private void BackToDatabase()
   {
@@ -176,6 +192,10 @@ public class KeybagSetViewModel:
   }
 
   public KeybagDbViewModel Owner { get; }
+
+  public KeybagDbViewModel DbModel { get => Owner; }
+
+  public MainViewModel AppModel { get => Owner.AppModel; }
 
   public string Tag { get => Model.Tag; }
 
@@ -451,6 +471,20 @@ public class KeybagSetViewModel:
 
   public string ToggleDefaultIcon {
     get => IsDefault ? "StarOutline" : "Star";
+  }
+
+  private MessageSubscription _onAutoHideStateChanged;
+
+  private void OnAutoHideStateChanged(TimerViewModel tvm)
+  {
+    Trace.TraceWarning("Not Yet Implemented: OnAutoHideStateChanged");
+  }
+
+  private MessageSubscription _onAutoHideProgressChanged;
+
+  private void OnAutoHideProgressChanged(TimerViewModel tvm)
+  {
+    Trace.TraceWarning("Not Yet Implemented: OnAutoHideProgressChanged");
   }
 
   private void Eject()

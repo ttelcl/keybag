@@ -17,15 +17,17 @@ using System.Windows.Input;
 using Lcl.KeyBag3.Model;
 using Lcl.KeyBag3.Model.Contents;
 using Lcl.KeyBag3.Model.TreeMath;
+using Lcl.KeyBag3.Storage;
 
 using Keybag3.Main.Database;
 using Keybag3.Main.Synchronization;
+using Keybag3.MessageUtilities;
 using Keybag3.WpfUtilities;
-using Lcl.KeyBag3.Storage;
 
 namespace Keybag3.Main.KeybagContent;
 
-public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
+public class KeybagViewModel: ViewModelBase, IEntryContainer,
+  IHasMessageHub, IKnowSetModel
 {
   public KeybagViewModel(
     KeybagSetViewModel owner)
@@ -87,8 +89,8 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
       Trace.TraceError("Internal Error: Keybag Not Decoded. This state may be unstable.");
       Decoded = false;
     }
-    this.Subscribe<ScopeFilterViewModel>(
-      MessageChannels.ScopeFilterChanged, ScopeFilterChanged, true);
+    _scopeFilterChanged = this.Subscribe<ScopeFilterViewModel>(
+      ScopeFilterViewModel.ScopeFilterChanged, ScopeFilterChanged, true);
   }
 
   public ICommand DeselectCommand { get; }
@@ -152,6 +154,12 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
   }
 
   public KeybagSetViewModel Owner { get; }
+
+  public KeybagSetViewModel SetModel { get => Owner; }
+
+  public KeybagDbViewModel DbModel { get => Owner.DbModel; }
+
+  public MainViewModel AppModel { get => Owner.DbModel.AppModel; }
 
   public ChunkSet<EntryViewModel> Scope {
     get => _scope;
@@ -518,6 +526,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer, IHasMessageHub
   {
     RecalculateScope();
   }
+  private MessageSubscription _scopeFilterChanged;
 
   public SearchFilterViewModel SearchFilter {
     get;

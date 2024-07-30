@@ -15,20 +15,24 @@ using System.Windows.Media;
 using ControlzEx.Theming;
 
 using Keybag3.Main.Database;
+using Keybag3.Main.Support;
+using Keybag3.MessageUtilities;
 using Keybag3.Services;
 using Keybag3.WpfUtilities;
 
 namespace Keybag3.Main;
 
 public class MainViewModel:
-  ViewModelBase, IStatusMessage, ISupportsOverlay, IHasCurrentView
+  ViewModelBase, IStatusMessage, ISupportsOverlay, IHasCurrentView, IHasMessageHub
 {
   private Stack<ViewModelBase> _overlayStack;
 
   public MainViewModel(KeybagServices services)
   {
     _overlayStack = new Stack<ViewModelBase>();
+    MessageHub = new MessageHub();
     Services = services;
+    AutoHideTimer = new TimerViewModel(this, TimeSpan.FromSeconds(180));
     DbViewModel = new KeybagDbViewModel(this);
     if(DbViewModel.DefaultKeybag == null)
     {
@@ -62,6 +66,11 @@ public class MainViewModel:
         ThemeColor = s;
       }
     });
+
+    ToggleVerboseChannelCommand = new DelegateCommand(p => {
+      MessageHub.VerboseSend = !MessageHub.VerboseSend;
+      Trace.TraceInformation($"VerboseSend is now: {MessageHub.VerboseSend}");
+    });
     
     _themePaletteItem = Services.ThemeHelper[ThemeColor];
   }
@@ -69,6 +78,8 @@ public class MainViewModel:
   public KeybagServices Services { get; }
 
   public KeybagDbViewModel DbViewModel { get; }
+
+  public MessageHub MessageHub { get; }
   
   public ICommand ExitCommand { get; } = new DelegateCommand(p => {
     var w = Application.Current.MainWindow;
@@ -89,6 +100,8 @@ public class MainViewModel:
   public ICommand CloseOverlayCommand { get; }
 
   public ICommand SetThemeCommand { get; }
+
+  public ICommand ToggleVerboseChannelCommand { get; }
 
   public ViewModelBase? Overlay {
     get => _overlay;
@@ -130,6 +143,7 @@ public class MainViewModel:
     }
   }
 
+  public TimerViewModel AutoHideTimer { get; }
 
   public bool NoOverlay { 
     get => _overlay == null;

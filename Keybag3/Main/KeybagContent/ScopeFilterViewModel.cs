@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Keybag3.MessageUtilities;
 using Keybag3.WpfUtilities;
 
 using Lcl.KeyBag3.Model;
@@ -22,6 +22,8 @@ public class ScopeFilterViewModel: ViewModelBase<KeybagViewModel>
     : base(keybag)
   {
   }
+
+  public const string ScopeFilterChanged = "scope-filter-changed";
 
   public bool Expanded {
     get => _expanded;
@@ -45,7 +47,7 @@ public class ScopeFilterViewModel: ViewModelBase<KeybagViewModel>
     set {
       if(SetValueProperty(ref _showArchived, value))
       {
-        Model.SendMessage(MessageChannels.ScopeFilterChanged, this);
+        Model.SendMessage(ScopeFilterChanged, this);
       }
     }
   }
@@ -56,7 +58,7 @@ public class ScopeFilterViewModel: ViewModelBase<KeybagViewModel>
     set {
       if(SetValueProperty(ref _showErased, value))
       {
-        Model.SendMessage(MessageChannels.ScopeFilterChanged, this);
+        Model.SendMessage(ScopeFilterChanged, this);
       }
     }
   }
@@ -67,7 +69,7 @@ public class ScopeFilterViewModel: ViewModelBase<KeybagViewModel>
     set {
       if(SetValueProperty(ref _showSealed, value))
       {
-        Model.SendMessage(MessageChannels.ScopeFilterChanged, this);
+        Model.SendMessage(ScopeFilterChanged, this);
       }
     }
   }
