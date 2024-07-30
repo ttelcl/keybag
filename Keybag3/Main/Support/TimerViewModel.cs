@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 using Keybag3.MessageUtilities;
 using Keybag3.WpfUtilities;
@@ -37,12 +38,19 @@ public enum AutoHideState
 /// </summary>
 public class TimerViewModel: ViewModelBase
 {
+  private DispatcherTimer _timer;
+
   public TimerViewModel(
     IHasMessageHub messageHost,
     TimeSpan timeOut)
   {
     _timeOut = timeOut;
     _startTime = DateTimeOffset.UtcNow;
+    _timer = new DispatcherTimer() {
+      Interval = TimeSpan.FromMilliseconds(1000),
+      IsEnabled = false,
+    };
+    _timer.Tick += (s, e) => Tick();
     MessageHost = messageHost;
   }
 
@@ -58,6 +66,7 @@ public class TimerViewModel: ViewModelBase
     {
       if(SetValueProperty(ref _state, value))
       {
+        Trace.TraceInformation($"Auto Hide timer State: {value}");
         MessageHost.SendMessage(AutoHideStateChanged, this);
       }
     }
@@ -71,6 +80,7 @@ public class TimerViewModel: ViewModelBase
     {
       if(SetValueProperty(ref _isArmed, value))
       {
+        Trace.TraceInformation($"Auto Hide timer IsArmed: {value}");
         if(!value)
         {
           Fraction = 0;
@@ -143,7 +153,6 @@ public class TimerViewModel: ViewModelBase
       }
       Fraction = fraction;
     }
-
   }
 
   public TimeSpan TimeOut {

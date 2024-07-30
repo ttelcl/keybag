@@ -63,6 +63,8 @@
                           Command="{Binding DbViewModel.TestEmptyCommand}"/>
                 <MenuItem Header="_Toggle Verbose Channel Sends"
                           Command="{Binding ToggleVerboseChannelCommand}"/>
+                <MenuItem Header="Toggle AutoHide timer arming"
+                          Command="{Binding DbgToggleTimerArmed}"/>
             </MenuItem>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">

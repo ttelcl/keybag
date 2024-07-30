@@ -71,6 +71,10 @@ public class MainViewModel:
       MessageHub.VerboseSend = !MessageHub.VerboseSend;
       Trace.TraceInformation($"VerboseSend is now: {MessageHub.VerboseSend}");
     });
+
+    DbgToggleTimerArmed = new DelegateCommand(p => {
+      AutoHideTimer.IsArmed = !AutoHideTimer.IsArmed;
+    });
     
     _themePaletteItem = Services.ThemeHelper[ThemeColor];
   }
@@ -102,6 +106,8 @@ public class MainViewModel:
   public ICommand SetThemeCommand { get; }
 
   public ICommand ToggleVerboseChannelCommand { get; }
+
+  public ICommand DbgToggleTimerArmed { get; }
 
   public ViewModelBase? Overlay {
     get => _overlay;
