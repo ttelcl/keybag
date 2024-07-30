@@ -14,77 +14,77 @@ namespace Keybag3.MessageUtilities;
 /// </summary>
 public interface IHasMessageHub
 {
-    /// <summary>
-    /// The MessageHub
-    /// </summary>
-    MessageHub MessageHub { get; }
+  /// <summary>
+  /// The MessageHub
+  /// </summary>
+  MessageHub MessageHub { get; }
 }
 
 public static class MessageHubExtensions
 {
-    public static IHasMessageHub SendMessage<TSender, TValue>(
-      this IHasMessageHub hasMessageHub,
-      string channelName,
-      TSender sender,
-      TValue value)
-    {
-        hasMessageHub.MessageHub.Send(channelName, sender, value);
-        return hasMessageHub;
-    }
+  public static IHasMessageHub SendMessage<TSender, TValue>(
+    this IHasMessageHub hasMessageHub,
+    string channelName,
+    TSender sender,
+    TValue value)
+  {
+    hasMessageHub.MessageHub.Send(channelName, sender, value);
+    return hasMessageHub;
+  }
 
-    public static IHasMessageHub SendMessage<TSender>(
-      this IHasMessageHub hasMessageHub,
-      string channelName,
-      TSender sender)
-    {
-        hasMessageHub.MessageHub.Send(channelName, sender);
-        return hasMessageHub;
-    }
+  public static IHasMessageHub SendMessage<TSender>(
+    this IHasMessageHub hasMessageHub,
+    string channelName,
+    TSender sender)
+  {
+    hasMessageHub.MessageHub.Send(channelName, sender);
+    return hasMessageHub;
+  }
 
-    public static IHasMessageHub RegisterChannel<TSender, TValue>(
-      this IHasMessageHub hasMessageHub,
-      string channelName)
-    {
-        hasMessageHub.MessageHub.RegisterChannel<TSender, TValue>(channelName);
-        return hasMessageHub;
-    }
+  public static IHasMessageHub RegisterChannel<TSender, TValue>(
+    this IHasMessageHub hasMessageHub,
+    string channelName)
+  {
+    hasMessageHub.MessageHub.RegisterChannel<TSender, TValue>(channelName);
+    return hasMessageHub;
+  }
 
-    public static IHasMessageHub RegisterNoValueChannel<TSender>(
-      this IHasMessageHub hasMessageHub,
-      string channelName)
-    {
-        hasMessageHub.MessageHub.RegisterNoValueChannel<TSender>(channelName);
-        return hasMessageHub;
-    }
+  public static IHasMessageHub RegisterNoValueChannel<TSender>(
+    this IHasMessageHub hasMessageHub,
+    string channelName)
+  {
+    hasMessageHub.MessageHub.RegisterNoValueChannel<TSender>(channelName);
+    return hasMessageHub;
+  }
 
-    public static IHasMessageHub Subscribe<TSender, TValue>(
-      this IHasMessageHub hasMessageHub,
-      string channelName,
-      Action<TSender, TValue> action,
-      bool register = false)
+  public static IHasMessageHub Subscribe<TSender, TValue>(
+    this IHasMessageHub hasMessageHub,
+    string channelName,
+    Action<TSender, TValue> action,
+    bool register = false)
+  {
+    if(register)
     {
-        if (register)
-        {
-            hasMessageHub.MessageHub.RegisterChannel<TSender, TValue>(channelName);
-        }
-        hasMessageHub.MessageHub.Subscribe(channelName, action);
-        return hasMessageHub;
+      hasMessageHub.MessageHub.RegisterChannel<TSender, TValue>(channelName);
     }
+    hasMessageHub.MessageHub.Subscribe(channelName, action);
+    return hasMessageHub;
+  }
 
-    public static IHasMessageHub Subscribe<TSender>(
-      this IHasMessageHub hasMessageHub,
-      string channelName,
-      Action<TSender> action,
-      bool register = false)
+  public static IHasMessageHub Subscribe<TSender>(
+    this IHasMessageHub hasMessageHub,
+    string channelName,
+    Action<TSender> action,
+    bool register = false)
+  {
+    if(register)
     {
-        if (register)
-        {
-            hasMessageHub.MessageHub.RegisterNoValueChannel<TSender>(channelName);
-        }
-        hasMessageHub.MessageHub.Subscribe(channelName, action);
-        return hasMessageHub;
+      hasMessageHub.MessageHub.RegisterNoValueChannel<TSender>(channelName);
     }
+    hasMessageHub.MessageHub.Subscribe(channelName, action);
+    return hasMessageHub;
+  }
 
-    //--
+  //--
 }
 
