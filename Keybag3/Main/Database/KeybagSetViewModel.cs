@@ -21,6 +21,8 @@ using Lcl.KeyBag3.Model;
 using Keybag3.Main.KeybagContent;
 using Keybag3.Main.Synchronization;
 using Keybag3.WpfUtilities;
+using Keybag3.Main.Support;
+using Keybag3.MessageUtilities;
 
 namespace Keybag3.Main.Database;
 
@@ -31,7 +33,7 @@ namespace Keybag3.Main.Database;
 /// locked or unlocked).
 /// </summary>
 public class KeybagSetViewModel:
-  ViewModelBase<KeybagSet>, IRefreshable, IHasViewTitle
+  ViewModelBase<KeybagSet>, IRefreshable, IHasViewTitle, IHasMessageHub
 {
   public KeybagSetViewModel(
     KeybagDbViewModel owner,
@@ -39,6 +41,7 @@ public class KeybagSetViewModel:
     : base(kbset)
   {
     Owner = owner;
+    MessageHub = new MessageHub();
     TryUnlockCommand = new DelegateCommand(
       p => { TryStartPassphraseOverlay(); },
       p => !KeyKnown);
@@ -86,6 +89,14 @@ public class KeybagSetViewModel:
         && !KeybagModel.HasUnsavedChunks);
     ToggleDefaultCommand = new DelegateCommand(
       p => { ToggleDefault(); });
+
+    this.Subscribe<TimerViewModel>(
+      MessageChannels.AutoHideTimerChanged,
+      OnAutoHideTimerChanged,
+      true);
+
+    Trace.TraceWarning("TODO: rethink subscription logic in the view of disposal");
+
     Refresh();
   }
 
@@ -112,6 +123,8 @@ public class KeybagSetViewModel:
   public ICommand EjectCommand { get; }
 
   public ICommand ToggleDefaultCommand { get; }
+
+  public MessageHub MessageHub { get; }
 
   private void BackToDatabase()
   {
@@ -451,6 +464,11 @@ public class KeybagSetViewModel:
 
   public string ToggleDefaultIcon {
     get => IsDefault ? "StarOutline" : "Star";
+  }
+
+  private void OnAutoHideTimerChanged(TimerViewModel tvm)
+  {
+    Trace.TraceError("Not Yet Im+plemented: OnAutoHideTimerChanged");
   }
 
   private void Eject()
