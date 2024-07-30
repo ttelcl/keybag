@@ -6,6 +6,8 @@
              xmlns:converters="clr-namespace:Keybag3.Converters"
              xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              Startup="App_Startup"
+             Activated="Application_Activated"
+             Deactivated="Application_Deactivated"
              SessionEnding="Application_SessionEnding"
              Exit="Application_Exit">
     <Application.Resources>

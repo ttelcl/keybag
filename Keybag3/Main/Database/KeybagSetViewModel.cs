@@ -34,7 +34,7 @@ namespace Keybag3.Main.Database;
 /// </summary>
 public class KeybagSetViewModel:
   ViewModelBase<KeybagSet>, IRefreshable, IHasViewTitle, IHasMessageHub,
-  IKnowDbModel, IKnowAppModel
+  IKnowDbModel, IKnowAppModel, IAutoHideTimerListener
 {
   public KeybagSetViewModel(
     KeybagDbViewModel owner,
@@ -50,7 +50,11 @@ public class KeybagSetViewModel:
     ViewDatabaseCommand = new DelegateCommand(
       p => { BackToDatabase(); });
     ToggleContentCommand = new DelegateCommand(
-      p => { ShowingContent = !ShowingContent; });
+      p => {
+        var target = !ShowingContent;
+        AppModel.AutoHideTimer.ManualShowHide(target);
+        ShowingContent = target;
+      });
     SaveContentCommand = new DelegateCommand(
       p => {
         if(KeybagModel != null)
@@ -90,15 +94,6 @@ public class KeybagSetViewModel:
         && !KeybagModel.HasUnsavedChunks);
     ToggleDefaultCommand = new DelegateCommand(
       p => { ToggleDefault(); });
-
-    _onAutoHideStateChanged = AppModel.Subscribe<TimerViewModel>(
-      TimerViewModel.AutoHideStateChanged,
-      OnAutoHideStateChanged,
-      true);
-    _onAutoHideProgressChanged = AppModel.Subscribe<TimerViewModel>(
-      TimerViewModel.AutoHideProgressChanged,
-      OnAutoHideProgressChanged,
-      true);
 
     Refresh();
   }
@@ -473,18 +468,24 @@ public class KeybagSetViewModel:
     get => IsDefault ? "StarOutline" : "Star";
   }
 
-  private MessageSubscription _onAutoHideStateChanged;
-
-  private void OnAutoHideStateChanged(TimerViewModel tvm)
+  public void AutoHideStateChanged(AutoHideState state)
   {
-    Trace.TraceWarning("Not Yet Implemented: OnAutoHideStateChanged");
+    Trace.TraceWarning($"AutoHideStateChanged. {state}");
+    ShowingContent = state != AutoHideState.Hidden;
   }
 
-  private MessageSubscription _onAutoHideProgressChanged;
-
-  private void OnAutoHideProgressChanged(TimerViewModel tvm)
+  public void AutoHideProgressChanged(double fraction)
   {
-    Trace.TraceWarning("Not Yet Implemented: OnAutoHideProgressChanged");
+    Trace.TraceWarning($"AutoHideProgressChanged. {fraction}");
+    if(KeybagModel != null)
+    {
+      KeybagModel.TimerProgress = fraction;
+    }
+  }
+
+  public bool CanHideAnything()
+  {
+    return KeybagModel != null;
   }
 
   private void Eject()

@@ -33,6 +33,15 @@ public enum AutoHideState
   Hidden,
 }
 
+public interface IAutoHideTimerListener
+{
+  void AutoHideStateChanged(AutoHideState state);
+
+  void AutoHideProgressChanged(double fraction);
+
+  bool CanHideAnything();
+}
+
 /// <summary>
 /// Support class for the auto-hide timer
 /// </summary>
@@ -41,84 +50,118 @@ public class TimerViewModel: ViewModelBase
   private DispatcherTimer _timer;
 
   public TimerViewModel(
-    IHasMessageHub messageHost,
-    TimeSpan timeOut)
+    TimeSpan timeOut,
+    IAutoHideTimerListener? initialListener)
   {
     _timeOut = timeOut;
     _startTime = DateTimeOffset.UtcNow;
+    Listener = initialListener;
     _timer = new DispatcherTimer() {
       Interval = TimeSpan.FromMilliseconds(1000),
       IsEnabled = false,
     };
     _timer.Tick += (s, e) => Tick();
-    MessageHost = messageHost;
   }
 
-  public const string AutoHideStateChanged = "auto-hide-state-changed";
-  public const string AutoHideProgressChanged = "auto-hide-state-changed";
+  public IAutoHideTimerListener? Listener { get; set; }
 
-  public IHasMessageHub MessageHost { get; }
-
-  public AutoHideState State
-  {
+  public AutoHideState State {
     get => _state;
-    set
-    {
+    private set {
       if(SetValueProperty(ref _state, value))
       {
         Trace.TraceInformation($"Auto Hide timer State: {value}");
-        MessageHost.SendMessage(AutoHideStateChanged, this);
+        switch(_state)
+        {
+          case AutoHideState.StaticVisible:
+            _timer.IsEnabled = false;
+            Fraction = 0;
+            break;
+          case AutoHideState.Ticking:
+            _timer.IsEnabled = Listener?.CanHideAnything() ?? false;
+            break;
+          case AutoHideState.Hidden:
+            Fraction = 1;
+            _timer.IsEnabled = false;
+            break;
+          default:
+            throw new InvalidOperationException(
+              $"Unknown AutoHideState: {value}");
+        }
+        Listener?.AutoHideStateChanged(_state);
       }
     }
   }
   private AutoHideState _state;
 
-  public bool IsArmed
-  {
+  public bool IsArmed {
     get => _isArmed;
-    set
-    {
+    set {
       if(SetValueProperty(ref _isArmed, value))
       {
         Trace.TraceInformation($"Auto Hide timer IsArmed: {value}");
         if(!value)
         {
-          Fraction = 0;
-          _startTime = DateTimeOffset.UtcNow;
-          State = AutoHideState.StaticVisible;
+          if(TimedOut)
+          {
+            Fraction = 1;
+            State = AutoHideState.Hidden;
+          }
+          else
+          {
+            _startTime = DateTimeOffset.UtcNow;
+            Fraction = 0;
+            State = AutoHideState.StaticVisible;
+          }
         }
-        if(value)
+        else
         {
           _startTime = DateTimeOffset.UtcNow;
           State = TimedOut ? AutoHideState.Hidden : AutoHideState.Ticking;
         }
-        // Already available via State:
-        //MessageHost.SendMessage(MessageChannels.AutoHideTimerChanged, this);
       }
     }
   }
   private bool _isArmed;
 
-  public double Fraction
+  public void ManualShowHide(bool show)
   {
-    get => _fraction;
-    set
+    if(show)
     {
+      TimedOut = false;
+      IsArmed = false;
+    }
+    else
+    {
+      TimedOut = true;
+    }
+  }
+
+  public double Fraction {
+    get => _fraction;
+    set {
+      if(value < 0.0)
+      {
+        value = 0.0;
+      }
+      else if(value > 1.0)
+      {
+        value = 1.0;
+      }
       if(SetValueProperty(ref _fraction, value))
       {
-        MessageHost.SendMessage(AutoHideProgressChanged, this);
+        Listener?.AutoHideProgressChanged(_fraction);
       }
     }
   }
   private double _fraction;
 
-  public bool TimedOut
-  {
+  public bool TimedOut {
     get => _timedOut;
-    set
-    {
+    set {
       if(SetValueProperty(ref _timedOut, value))
       {
+        Trace.TraceInformation($"Auto Hide timer TimedOut: {value}");
         if(value)
         {
           var maxStart = DateTimeOffset.UtcNow - TimeOut;
@@ -129,12 +172,12 @@ public class TimerViewModel: ViewModelBase
             _startTime = maxStart-TimeSpan.FromSeconds(1);
           }
           State = AutoHideState.Hidden;
+          Fraction = 1.0;
         }
         else
         {
           State = IsArmed ? AutoHideState.Ticking : AutoHideState.StaticVisible;
         }
-        //MessageHost.SendMessage(MessageChannels.AutoHideTimerChanged, this);
       }
     }
   }

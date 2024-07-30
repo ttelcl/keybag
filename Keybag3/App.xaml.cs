@@ -222,4 +222,14 @@ public partial class App: Application
       e.Cancel = true;
     }
   }
+
+  private void Application_Activated(object sender, EventArgs e)
+  {
+    MainModel?.ApplicationShowing(true);
+  }
+
+  private void Application_Deactivated(object sender, EventArgs e)
+  {
+    MainModel?.ApplicationShowing(false);
+  }
 }

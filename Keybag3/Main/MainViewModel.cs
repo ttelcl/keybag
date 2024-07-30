@@ -23,7 +23,8 @@ using Keybag3.WpfUtilities;
 namespace Keybag3.Main;
 
 public class MainViewModel:
-  ViewModelBase, IStatusMessage, ISupportsOverlay, IHasCurrentView, IHasMessageHub
+  ViewModelBase, IStatusMessage, ISupportsOverlay, IHasCurrentView,
+  IHasMessageHub, IAutoHideTimerListener
 {
   private Stack<ViewModelBase> _overlayStack;
 
@@ -32,7 +33,9 @@ public class MainViewModel:
     _overlayStack = new Stack<ViewModelBase>();
     MessageHub = new MessageHub();
     Services = services;
-    AutoHideTimer = new TimerViewModel(this, TimeSpan.FromSeconds(180));
+    AutoHideTimer = new TimerViewModel(
+      TimeSpan.FromSeconds(90),
+      this);
     DbViewModel = new KeybagDbViewModel(this);
     if(DbViewModel.DefaultKeybag == null)
     {
@@ -46,7 +49,7 @@ public class MainViewModel:
     }
 
     ResetViewCommand = new DelegateCommand(p => {
-      CurrentView = DbViewModel; 
+      CurrentView = DbViewModel;
     });
 
     BadViewModelCommand = new DelegateCommand(p => {
@@ -75,7 +78,7 @@ public class MainViewModel:
     DbgToggleTimerArmed = new DelegateCommand(p => {
       AutoHideTimer.IsArmed = !AutoHideTimer.IsArmed;
     });
-    
+
     _themePaletteItem = Services.ThemeHelper[ThemeColor];
   }
 
@@ -84,7 +87,7 @@ public class MainViewModel:
   public KeybagDbViewModel DbViewModel { get; }
 
   public MessageHub MessageHub { get; }
-  
+
   public ICommand ExitCommand { get; } = new DelegateCommand(p => {
     var w = Application.Current.MainWindow;
     w?.Close();
@@ -151,7 +154,7 @@ public class MainViewModel:
 
   public TimerViewModel AutoHideTimer { get; }
 
-  public bool NoOverlay { 
+  public bool NoOverlay {
     get => _overlay == null;
   }
 
@@ -241,4 +244,39 @@ public class MainViewModel:
   }
   private Color? _themePaletteItem;
 
+  public void AutoHideStateChanged(AutoHideState state)
+  {
+    if(CurrentView is KeybagSetViewModel kbs)
+    {
+      kbs.AutoHideStateChanged(state);
+    }
+    else
+    {
+      Trace.TraceInformation(
+        $"Auto Hide State change has no target: {state}");
+    }
+  }
+
+  public void AutoHideProgressChanged(double fraction)
+  {
+    if(CurrentView is KeybagSetViewModel kbs)
+    {
+      kbs.AutoHideProgressChanged(fraction);
+    }
+    else
+    {
+      Trace.TraceInformation(
+        $"Auto Hide Progress change has no target: {fraction}");
+    }
+  }
+
+  public bool CanHideAnything()
+  {
+    return CurrentView is KeybagSetViewModel kbs && kbs.CanHideAnything();
+  }
+
+  public void ApplicationShowing(bool showing)
+  {
+    AutoHideTimer.IsArmed = !showing;
+  }
 }
