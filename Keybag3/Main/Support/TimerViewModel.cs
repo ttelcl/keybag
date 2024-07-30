@@ -14,6 +14,24 @@ using Keybag3.WpfUtilities;
 
 namespace Keybag3.Main.Support;
 
+public enum AutoHideState
+{
+  /// <summary>
+  /// The current keybag is visible and the auto-hide timer is not running
+  /// </summary>
+  StaticVisible,
+
+  /// <summary>
+  /// The current keybag is visible and the auto-hide timer is running
+  /// </summary>
+  Ticking,
+
+  /// <summary>
+  /// The current keybag is hidden (and the timer is irrelevant)
+  /// </summary>
+  Hidden,
+}
+
 /// <summary>
 /// Support class for the auto-hide timer
 /// </summary>
@@ -28,7 +46,23 @@ public class TimerViewModel: ViewModelBase
     MessageHost = messageHost;
   }
 
+  public const string AutoHideStateChanged = "auto-hide-state-changed";
+  public const string AutoHideProgressChanged = "auto-hide-state-changed";
+
   public IHasMessageHub MessageHost { get; }
+
+  public AutoHideState State
+  {
+    get => _state;
+    set
+    {
+      if(SetValueProperty(ref _state, value))
+      {
+        MessageHost.SendMessage(AutoHideStateChanged, this);
+      }
+    }
+  }
+  private AutoHideState _state;
 
   public bool IsArmed
   {
@@ -40,14 +74,16 @@ public class TimerViewModel: ViewModelBase
         if(!value)
         {
           Fraction = 0;
-          TimedOut = false;
           _startTime = DateTimeOffset.UtcNow;
+          State = AutoHideState.StaticVisible;
         }
         if(value)
         {
           _startTime = DateTimeOffset.UtcNow;
+          State = TimedOut ? AutoHideState.Hidden : AutoHideState.Ticking;
         }
-        MessageHost.SendMessage(MessageChannels.AutoHideTimerChanged, this);
+        // Already available via State:
+        //MessageHost.SendMessage(MessageChannels.AutoHideTimerChanged, this);
       }
     }
   }
@@ -60,6 +96,7 @@ public class TimerViewModel: ViewModelBase
     {
       if(SetValueProperty(ref _fraction, value))
       {
+        MessageHost.SendMessage(AutoHideProgressChanged, this);
       }
     }
   }
@@ -72,14 +109,22 @@ public class TimerViewModel: ViewModelBase
     {
       if(SetValueProperty(ref _timedOut, value))
       {
-        var maxStart = DateTimeOffset.UtcNow - TimeOut;
-        if(maxStart < _startTime)
+        if(value)
         {
-          // Something other than the timer marked this as timed out,
-          // make sure the timer isn't going to disagree
-          _startTime = maxStart-TimeSpan.FromSeconds(1);
+          var maxStart = DateTimeOffset.UtcNow - TimeOut;
+          if(maxStart < _startTime)
+          {
+            // Something other than the timer marked this as timed out,
+            // make sure the timer isn't going to disagree
+            _startTime = maxStart-TimeSpan.FromSeconds(1);
+          }
+          State = AutoHideState.Hidden;
         }
-        MessageHost.SendMessage(MessageChannels.AutoHideTimerChanged, this);
+        else
+        {
+          State = IsArmed ? AutoHideState.Ticking : AutoHideState.StaticVisible;
+        }
+        //MessageHost.SendMessage(MessageChannels.AutoHideTimerChanged, this);
       }
     }
   }

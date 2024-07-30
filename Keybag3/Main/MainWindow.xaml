@@ -61,6 +61,8 @@
                           Command="{Binding ResetViewCommand}"/>
                 <MenuItem Header="_Fake Empty Database"
                           Command="{Binding DbViewModel.TestEmptyCommand}"/>
+                <MenuItem Header="_Toggle Verbose Channel Sends"
+                          Command="{Binding ToggleVerboseChannelCommand}"/>
             </MenuItem>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">

@@ -33,7 +33,8 @@ namespace Keybag3.Main.Database;
 /// locked or unlocked).
 /// </summary>
 public class KeybagSetViewModel:
-  ViewModelBase<KeybagSet>, IRefreshable, IHasViewTitle, IHasMessageHub
+  ViewModelBase<KeybagSet>, IRefreshable, IHasViewTitle, IHasMessageHub,
+  IKnowDbModel, IKnowAppModel
 {
   public KeybagSetViewModel(
     KeybagDbViewModel owner,
@@ -90,12 +91,14 @@ public class KeybagSetViewModel:
     ToggleDefaultCommand = new DelegateCommand(
       p => { ToggleDefault(); });
 
-    this.Subscribe<TimerViewModel>(
-      MessageChannels.AutoHideTimerChanged,
-      OnAutoHideTimerChanged,
+    _onAutoHideStateChanged = AppModel.Subscribe<TimerViewModel>(
+      TimerViewModel.AutoHideStateChanged,
+      OnAutoHideStateChanged,
       true);
-
-    Trace.TraceWarning("TODO: rethink subscription logic in the view of disposal");
+    _onAutoHideProgressChanged = AppModel.Subscribe<TimerViewModel>(
+      TimerViewModel.AutoHideProgressChanged,
+      OnAutoHideProgressChanged,
+      true);
 
     Refresh();
   }
@@ -189,6 +192,10 @@ public class KeybagSetViewModel:
   }
 
   public KeybagDbViewModel Owner { get; }
+
+  public KeybagDbViewModel DbModel { get => Owner; }
+
+  public MainViewModel AppModel { get => Owner.AppModel; }
 
   public string Tag { get => Model.Tag; }
 
@@ -466,9 +473,18 @@ public class KeybagSetViewModel:
     get => IsDefault ? "StarOutline" : "Star";
   }
 
-  private void OnAutoHideTimerChanged(TimerViewModel tvm)
+  private MessageSubscription _onAutoHideStateChanged;
+
+  private void OnAutoHideStateChanged(TimerViewModel tvm)
   {
-    Trace.TraceError("Not Yet Im+plemented: OnAutoHideTimerChanged");
+    Trace.TraceWarning("Not Yet Implemented: OnAutoHideStateChanged");
+  }
+
+  private MessageSubscription _onAutoHideProgressChanged;
+
+  private void OnAutoHideProgressChanged(TimerViewModel tvm)
+  {
+    Trace.TraceWarning("Not Yet Implemented: OnAutoHideProgressChanged");
   }
 
   private void Eject()

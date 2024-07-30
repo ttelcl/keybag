@@ -49,15 +49,15 @@ public static class MessageHubExtensions
     return hasMessageHub;
   }
 
-  public static IHasMessageHub RegisterNoValueChannel<TSender>(
+  public static IHasMessageHub RegisterChannel<TSender>(
     this IHasMessageHub hasMessageHub,
     string channelName)
   {
-    hasMessageHub.MessageHub.RegisterNoValueChannel<TSender>(channelName);
+    hasMessageHub.MessageHub.RegisterChannel<TSender>(channelName);
     return hasMessageHub;
   }
 
-  public static IHasMessageHub Subscribe<TSender, TValue>(
+  public static Subscription<TSender, TValue> Subscribe<TSender, TValue>(
     this IHasMessageHub hasMessageHub,
     string channelName,
     Action<TSender, TValue> action,
@@ -67,11 +67,10 @@ public static class MessageHubExtensions
     {
       hasMessageHub.MessageHub.RegisterChannel<TSender, TValue>(channelName);
     }
-    hasMessageHub.MessageHub.Subscribe(channelName, action);
-    return hasMessageHub;
+    return hasMessageHub.MessageHub.Subscribe(channelName, action);
   }
 
-  public static IHasMessageHub Subscribe<TSender>(
+  public static Subscription<TSender> Subscribe<TSender>(
     this IHasMessageHub hasMessageHub,
     string channelName,
     Action<TSender> action,
@@ -79,10 +78,9 @@ public static class MessageHubExtensions
   {
     if(register)
     {
-      hasMessageHub.MessageHub.RegisterNoValueChannel<TSender>(channelName);
+      hasMessageHub.MessageHub.RegisterChannel<TSender>(channelName);
     }
-    hasMessageHub.MessageHub.Subscribe(channelName, action);
-    return hasMessageHub;
+    return hasMessageHub.MessageHub.Subscribe(channelName, action);
   }
 
   //--

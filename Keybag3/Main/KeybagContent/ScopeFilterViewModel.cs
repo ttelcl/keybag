@@ -23,6 +23,8 @@ public class ScopeFilterViewModel: ViewModelBase<KeybagViewModel>
   {
   }
 
+  public const string ScopeFilterChanged = "scope-filter-changed";
+
   public bool Expanded {
     get => _expanded;
     set {
@@ -45,7 +47,7 @@ public class ScopeFilterViewModel: ViewModelBase<KeybagViewModel>
     set {
       if(SetValueProperty(ref _showArchived, value))
       {
-        Model.SendMessage(MessageChannels.ScopeFilterChanged, this);
+        Model.SendMessage(ScopeFilterChanged, this);
       }
     }
   }
@@ -56,7 +58,7 @@ public class ScopeFilterViewModel: ViewModelBase<KeybagViewModel>
     set {
       if(SetValueProperty(ref _showErased, value))
       {
-        Model.SendMessage(MessageChannels.ScopeFilterChanged, this);
+        Model.SendMessage(ScopeFilterChanged, this);
       }
     }
   }
@@ -67,7 +69,7 @@ public class ScopeFilterViewModel: ViewModelBase<KeybagViewModel>
     set {
       if(SetValueProperty(ref _showSealed, value))
       {
-        Model.SendMessage(MessageChannels.ScopeFilterChanged, this);
+        Model.SendMessage(ScopeFilterChanged, this);
       }
     }
   }

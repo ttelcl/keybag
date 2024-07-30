@@ -19,11 +19,6 @@ namespace Keybag3.Main;
 /// </summary>
 public static class MessageChannels
 {
-  /// <summary>
-  /// The channel for scope filter changes, hosted in
-  /// <see cref="KeybagViewModel"/>
-  /// </summary>
-  public const string ScopeFilterChanged = "scope-filter-changed";
 
   /// <summary>
   /// The channel for auto-hide timer changes, hosted in

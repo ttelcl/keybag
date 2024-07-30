@@ -14,20 +14,22 @@ public interface IMessageChannelBase
   string ChannelName { get; }
 }
 
-public interface IMessageChannel<TSender>: IMessageChannelBase
-{
-  void Send(TSender sender);
+//public interface IMessageChannel<TSender>: IMessageChannelBase
+//{
+//  void Send(TSender sender);
 
-  event Action<TSender>? MessageReceived;
-}
+//  Subscription<TSender> Subscribe(Action<TSender> action);
 
-public interface IMessageChannel: IMessageChannel<object>
-{
-}
+//  //event Action<TSender>? MessageReceived;
+//}
 
-public interface IMessageChannel<TSender, TValue>: IMessageChannelBase
-{
-  void Send(TSender sender, TValue value);
+//public interface IMessageChannel: IMessageChannel<object>
+//{
+//}
 
-  event Action<TSender, TValue>? MessageReceived;
-}
+//public interface IMessageChannel<TSender, TValue>: IMessageChannelBase
+//{
+//  void Send(TSender sender, TValue value);
+
+//  event Action<TSender, TValue>? MessageReceived;
+//}
