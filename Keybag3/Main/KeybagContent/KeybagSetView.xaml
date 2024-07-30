@@ -52,16 +52,17 @@
                 <Grid
                     ToolTipService.InitialShowDelay="100"
                     ToolTipService.BetweenShowDelay="0"
-                    ToolTip="Show or hide content"
+                    ToolTip="{Binding ShowTooltip}"
                     Margin="5,2" MinWidth="100">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Background="#3300FF00">
+                    <!-- Show autohide timer here? -->
+                    <!--<Border Grid.Column="0" Background="#3300FF00">
                     </Border>
                     <Border Grid.Column="1" Background="#33FF0000">
-                    </Border>
+                    </Border>-->
                     <Button Padding="5,3" Grid.ColumnSpan="2"
                             Background="Transparent"
                         Command="{Binding ToggleContentCommand}"

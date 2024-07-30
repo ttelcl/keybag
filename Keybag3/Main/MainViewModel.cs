@@ -15,20 +15,27 @@ using System.Windows.Media;
 using ControlzEx.Theming;
 
 using Keybag3.Main.Database;
+using Keybag3.Main.Support;
+using Keybag3.MessageUtilities;
 using Keybag3.Services;
 using Keybag3.WpfUtilities;
 
 namespace Keybag3.Main;
 
 public class MainViewModel:
-  ViewModelBase, IStatusMessage, ISupportsOverlay, IHasCurrentView
+  ViewModelBase, IStatusMessage, ISupportsOverlay, IHasCurrentView,
+  IHasMessageHub, IAutoHideTimerListener
 {
   private Stack<ViewModelBase> _overlayStack;
 
   public MainViewModel(KeybagServices services)
   {
     _overlayStack = new Stack<ViewModelBase>();
+    MessageHub = new MessageHub();
     Services = services;
+    AutoHideTimer = new TimerViewModel(
+      TimeSpan.FromSeconds(90),
+      this);
     DbViewModel = new KeybagDbViewModel(this);
     if(DbViewModel.DefaultKeybag == null)
     {
@@ -42,7 +49,7 @@ public class MainViewModel:
     }
 
     ResetViewCommand = new DelegateCommand(p => {
-      CurrentView = DbViewModel; 
+      CurrentView = DbViewModel;
     });
 
     BadViewModelCommand = new DelegateCommand(p => {
@@ -62,14 +69,25 @@ public class MainViewModel:
         ThemeColor = s;
       }
     });
-    
+
+    ToggleVerboseChannelCommand = new DelegateCommand(p => {
+      MessageHub.VerboseSend = !MessageHub.VerboseSend;
+      Trace.TraceInformation($"VerboseSend is now: {MessageHub.VerboseSend}");
+    });
+
+    DbgToggleTimerArmed = new DelegateCommand(p => {
+      AutoHideTimer.IsArmed = !AutoHideTimer.IsArmed;
+    });
+
     _themePaletteItem = Services.ThemeHelper[ThemeColor];
   }
 
   public KeybagServices Services { get; }
 
   public KeybagDbViewModel DbViewModel { get; }
-  
+
+  public MessageHub MessageHub { get; }
+
   public ICommand ExitCommand { get; } = new DelegateCommand(p => {
     var w = Application.Current.MainWindow;
     w?.Close();
@@ -89,6 +107,10 @@ public class MainViewModel:
   public ICommand CloseOverlayCommand { get; }
 
   public ICommand SetThemeCommand { get; }
+
+  public ICommand ToggleVerboseChannelCommand { get; }
+
+  public ICommand DbgToggleTimerArmed { get; }
 
   public ViewModelBase? Overlay {
     get => _overlay;
@@ -130,8 +152,9 @@ public class MainViewModel:
     }
   }
 
+  public TimerViewModel AutoHideTimer { get; }
 
-  public bool NoOverlay { 
+  public bool NoOverlay {
     get => _overlay == null;
   }
 
@@ -221,4 +244,39 @@ public class MainViewModel:
   }
   private Color? _themePaletteItem;
 
+  public void AutoHideStateChanged(AutoHideState state)
+  {
+    if(CurrentView is KeybagSetViewModel kbs)
+    {
+      kbs.AutoHideStateChanged(state);
+    }
+    else
+    {
+      Trace.TraceInformation(
+        $"Auto Hide State change has no target: {state}");
+    }
+  }
+
+  public void AutoHideProgressChanged(double fraction)
+  {
+    if(CurrentView is KeybagSetViewModel kbs)
+    {
+      kbs.AutoHideProgressChanged(fraction);
+    }
+    else
+    {
+      Trace.TraceInformation(
+        $"Auto Hide Progress change has no target: {fraction}");
+    }
+  }
+
+  public bool CanHideAnything()
+  {
+    return CurrentView is KeybagSetViewModel kbs && kbs.CanHideAnything();
+  }
+
+  public void ApplicationShowing(bool showing)
+  {
+    AutoHideTimer.IsArmed = !showing;
+  }
 }

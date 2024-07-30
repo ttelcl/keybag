@@ -21,6 +21,8 @@ using Lcl.KeyBag3.Model;
 using Keybag3.Main.KeybagContent;
 using Keybag3.Main.Synchronization;
 using Keybag3.WpfUtilities;
+using Keybag3.Main.Support;
+using Keybag3.MessageUtilities;
 
 namespace Keybag3.Main.Database;
 
@@ -31,7 +33,8 @@ namespace Keybag3.Main.Database;
 /// locked or unlocked).
 /// </summary>
 public class KeybagSetViewModel:
-  ViewModelBase<KeybagSet>, IRefreshable, IHasViewTitle
+  ViewModelBase<KeybagSet>, IRefreshable, IHasViewTitle, IHasMessageHub,
+  IKnowDbModel, IKnowAppModel, IAutoHideTimerListener
 {
   public KeybagSetViewModel(
     KeybagDbViewModel owner,
@@ -39,6 +42,7 @@ public class KeybagSetViewModel:
     : base(kbset)
   {
     Owner = owner;
+    MessageHub = new MessageHub();
     TryUnlockCommand = new DelegateCommand(
       p => { TryStartPassphraseOverlay(); },
       p => !KeyKnown);
@@ -46,7 +50,11 @@ public class KeybagSetViewModel:
     ViewDatabaseCommand = new DelegateCommand(
       p => { BackToDatabase(); });
     ToggleContentCommand = new DelegateCommand(
-      p => { ShowingContent = !ShowingContent; });
+      p => {
+        var target = !ShowingContent;
+        AppModel.AutoHideTimer.ManualShowHide(target);
+        ShowingContent = target;
+      });
     SaveContentCommand = new DelegateCommand(
       p => {
         if(KeybagModel != null)
@@ -86,6 +94,7 @@ public class KeybagSetViewModel:
         && !KeybagModel.HasUnsavedChunks);
     ToggleDefaultCommand = new DelegateCommand(
       p => { ToggleDefault(); });
+
     Refresh();
   }
 
@@ -112,6 +121,8 @@ public class KeybagSetViewModel:
   public ICommand EjectCommand { get; }
 
   public ICommand ToggleDefaultCommand { get; }
+
+  public MessageHub MessageHub { get; }
 
   private void BackToDatabase()
   {
@@ -167,8 +178,9 @@ public class KeybagSetViewModel:
 
   public void ViewThisSet()
   {
-    ShowingContent = true; // includes InitKeybagModel
     Owner.AppModel.CurrentView = this;
+    ShowingContent = true; // includes InitKeybagModel
+    AppModel.AutoHideTimer.ManualShowHide(true); // prevent desync
     if(!KeyKnown)
     {
       TryStartPassphraseOverlay();
@@ -176,6 +188,10 @@ public class KeybagSetViewModel:
   }
 
   public KeybagDbViewModel Owner { get; }
+
+  public KeybagDbViewModel DbModel { get => Owner; }
+
+  public MainViewModel AppModel { get => Owner.AppModel; }
 
   public string Tag { get => Model.Tag; }
 
@@ -305,6 +321,7 @@ public class KeybagSetViewModel:
       if(SetValueProperty(ref _showingContent, value))
       {
         RaisePropertyChanged(nameof(ShowText));
+        RaisePropertyChanged(nameof(ShowTooltip));
         RaisePropertyChanged(nameof(ShowIcon));
         RaisePropertyChanged(nameof(KeyKnownAndShowing));
       }
@@ -345,6 +362,7 @@ public class KeybagSetViewModel:
     {
       RaisePropertyChanged(nameof(ShowingContent));
       RaisePropertyChanged(nameof(ShowText));
+      RaisePropertyChanged(nameof(ShowTooltip));
       RaisePropertyChanged(nameof(ShowIcon));
       RaisePropertyChanged(nameof(KeyKnownAndShowing));
     }
@@ -359,6 +377,7 @@ public class KeybagSetViewModel:
         && key!=null)
       {
         KeybagModel = new KeybagViewModel(this);
+        KeybagModel.TimerProgress = AppModel.AutoHideTimer.Fraction;
       }
       else
       {
@@ -381,6 +400,10 @@ public class KeybagSetViewModel:
 
   public string ShowText {
     get => ShowingContent ? "Hide" : "Show";
+  }
+
+  public string ShowTooltip {
+    get => ShowingContent ? "Hide keybag content" : "Show keybag content";
   }
 
   public string ShowIcon {
@@ -453,6 +476,26 @@ public class KeybagSetViewModel:
     get => IsDefault ? "StarOutline" : "Star";
   }
 
+  public void AutoHideStateChanged(AutoHideState state)
+  {
+    // Trace.TraceWarning($"AutoHideStateChanged. {state}");
+    ShowingContent = state != AutoHideState.Hidden;
+  }
+
+  public void AutoHideProgressChanged(double fraction)
+  {
+    // Trace.TraceWarning($"AutoHideProgressChanged. {fraction}");
+    if(KeybagModel != null)
+    {
+      KeybagModel.TimerProgress = fraction;
+    }
+  }
+
+  public bool CanHideAnything()
+  {
+    return KeybagModel != null;
+  }
+
   private void Eject()
   {
     KeybagModel = null;
@@ -463,6 +506,7 @@ public class KeybagSetViewModel:
     {
       RaisePropertyChanged(nameof(ShowingContent));
       RaisePropertyChanged(nameof(ShowText));
+      RaisePropertyChanged(nameof(ShowTooltip));
       RaisePropertyChanged(nameof(ShowIcon));
     }
     Owner.AppModel.CurrentView = Owner;

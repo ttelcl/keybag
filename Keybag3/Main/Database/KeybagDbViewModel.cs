@@ -27,7 +27,7 @@ public enum KeybagSortOrder
 }
 
 public class KeybagDbViewModel:
-  ViewModelBase<KeybagDb>, IRefreshable, IHasViewTitle
+  ViewModelBase<KeybagDb>, IRefreshable, IHasViewTitle, IKnowAppModel
 {
   public KeybagDbViewModel(
     MainViewModel appModel)

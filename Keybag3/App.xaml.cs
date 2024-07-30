@@ -185,6 +185,16 @@ public partial class App: Application
         "/Keybag3/Fore/EntrySealed",
       ], "#D0D0C8");
 
+    bc.AddAliases([
+        "/Keybag3/Fore/AutoHideLow",
+      ], "#6D8764");
+    bc.AddAliases([
+        "/Keybag3/Fore/AutoHideMid",
+      ], "#BBBB44");
+    bc.AddAliases([
+        "/Keybag3/Fore/AutoHideHigh",
+      ], "#BB4444");
+
   }
 
   private void ProcessUnhandledException(
@@ -221,5 +231,15 @@ public partial class App: Application
     {
       e.Cancel = true;
     }
+  }
+
+  private void Application_Activated(object sender, EventArgs e)
+  {
+    MainModel?.ApplicationShowing(true);
+  }
+
+  private void Application_Deactivated(object sender, EventArgs e)
+  {
+    MainModel?.ApplicationShowing(false);
   }
 }
