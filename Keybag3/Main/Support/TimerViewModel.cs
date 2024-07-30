@@ -57,7 +57,7 @@ public class TimerViewModel: ViewModelBase
     _startTime = DateTimeOffset.UtcNow;
     Listener = initialListener;
     _timer = new DispatcherTimer() {
-      Interval = TimeSpan.FromMilliseconds(1000),
+      Interval = TimeSpan.FromMilliseconds(333),
       IsEnabled = false,
     };
     _timer.Tick += (s, e) => Tick();

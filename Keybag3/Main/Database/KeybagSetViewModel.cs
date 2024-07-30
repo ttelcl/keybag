@@ -178,8 +178,9 @@ public class KeybagSetViewModel:
 
   public void ViewThisSet()
   {
-    ShowingContent = true; // includes InitKeybagModel
     Owner.AppModel.CurrentView = this;
+    ShowingContent = true; // includes InitKeybagModel
+    AppModel.AutoHideTimer.ManualShowHide(true); // prevent desync
     if(!KeyKnown)
     {
       TryStartPassphraseOverlay();
@@ -320,6 +321,7 @@ public class KeybagSetViewModel:
       if(SetValueProperty(ref _showingContent, value))
       {
         RaisePropertyChanged(nameof(ShowText));
+        RaisePropertyChanged(nameof(ShowTooltip));
         RaisePropertyChanged(nameof(ShowIcon));
         RaisePropertyChanged(nameof(KeyKnownAndShowing));
       }
@@ -360,6 +362,7 @@ public class KeybagSetViewModel:
     {
       RaisePropertyChanged(nameof(ShowingContent));
       RaisePropertyChanged(nameof(ShowText));
+      RaisePropertyChanged(nameof(ShowTooltip));
       RaisePropertyChanged(nameof(ShowIcon));
       RaisePropertyChanged(nameof(KeyKnownAndShowing));
     }
@@ -374,6 +377,7 @@ public class KeybagSetViewModel:
         && key!=null)
       {
         KeybagModel = new KeybagViewModel(this);
+        KeybagModel.TimerProgress = AppModel.AutoHideTimer.Fraction;
       }
       else
       {
@@ -396,6 +400,10 @@ public class KeybagSetViewModel:
 
   public string ShowText {
     get => ShowingContent ? "Hide" : "Show";
+  }
+
+  public string ShowTooltip {
+    get => ShowingContent ? "Hide keybag content" : "Show keybag content";
   }
 
   public string ShowIcon {
@@ -470,13 +478,13 @@ public class KeybagSetViewModel:
 
   public void AutoHideStateChanged(AutoHideState state)
   {
-    Trace.TraceWarning($"AutoHideStateChanged. {state}");
+    // Trace.TraceWarning($"AutoHideStateChanged. {state}");
     ShowingContent = state != AutoHideState.Hidden;
   }
 
   public void AutoHideProgressChanged(double fraction)
   {
-    Trace.TraceWarning($"AutoHideProgressChanged. {fraction}");
+    // Trace.TraceWarning($"AutoHideProgressChanged. {fraction}");
     if(KeybagModel != null)
     {
       KeybagModel.TimerProgress = fraction;
@@ -498,6 +506,7 @@ public class KeybagSetViewModel:
     {
       RaisePropertyChanged(nameof(ShowingContent));
       RaisePropertyChanged(nameof(ShowText));
+      RaisePropertyChanged(nameof(ShowTooltip));
       RaisePropertyChanged(nameof(ShowIcon));
     }
     Owner.AppModel.CurrentView = Owner;

@@ -45,15 +45,16 @@
             ToolTipService.InitialShowDelay="100"
             ToolTipService.BetweenShowDelay="0"
             ToolTip="Autohide timer progress"
+            Background="{Binding TimerColor, Converter={StaticResource Kb3Fore}}"
             MinWidth="8">
-            <Border.Background>
+            <!--<Border.Background>
                 <LinearGradientBrush>
-                    <GradientStop Offset="0" Color="#FF448A44" />
-                    <GradientStop Offset="0.5" Color="#FF008A00" />
-                    <GradientStop Offset="0.7" Color="#FFCCCC00" />
-                    <GradientStop Offset="0.9" Color="#FFCC0000" />
+                    <GradientStop Offset="0" Color="#6D8764" />
+                    <GradientStop Offset="0.5" Color="#6D8764" />
+                    <GradientStop Offset="0.7" Color="#BBBB44" />
+                    <GradientStop Offset="0.9" Color="#BB4444" />
                 </LinearGradientBrush>
-            </Border.Background>
+            </Border.Background>-->
         </Border>
         <Grid
             ToolTipService.InitialShowDelay="100"
@@ -67,7 +68,6 @@
                 Grid.Row="1"
                 Opacity="0.8"
                 Background="{DynamicResource MahApps.Brushes.ThemeBackground}">
-                
             </Border>
         </Grid>
         <!-- Left column -->

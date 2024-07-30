@@ -656,10 +656,11 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer,
       {
         RaisePropertyChanged(nameof(TimerTop));
         RaisePropertyChanged(nameof(TimerBottom));
+        RaisePropertyChanged(nameof(TimerColor));
       }
     }
   }
-  private double _timerProgress = 0.42;
+  private double _timerProgress = 0.0;
 
   public GridLength TimerTop {
     get => new(1.0 + _timerProgress*100.0, GridUnitType.Star);
@@ -669,7 +670,22 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer,
     get => new(1.0 + (1.0-_timerProgress)*100.0, GridUnitType.Star);
   }
 
-  //private GridLength _timerProgress = new GridLength(1, GridUnitType.Star);
+  public string TimerColor {
+    get {
+      if(TimerProgress < 0.70)
+      {
+        return "AutoHideLow";
+      }
+      else if(TimerProgress < 0.90)
+      {
+        return "AutoHideMid";
+      }
+      else
+      {
+        return "AutoHideHigh";
+      }
+    }
+  }
 
   // --
 }
