@@ -71,6 +71,8 @@ public class MessageChannel<TSender, TValue>: IMessageChannelBase
     {
       foreach(var guid in expiredGuids)
       {
+        Trace.TraceInformation(
+          $"{ChannelName}: auto-unsubscribe {guid}");
         _subscriptions.Remove(guid);
       }
     }
@@ -170,6 +172,8 @@ public class MessageChannel<TSender>: IMessageChannelBase
     {
       foreach(var guid in expiredGuids)
       {
+        Trace.TraceInformation(
+          $"{ChannelName}: auto-unsubscribe {guid}");
         _subscriptions.Remove(guid);
       }
     }
