@@ -166,6 +166,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer,
     set {
       if(SetInstanceProperty(ref _scope, value))
       {
+        ApplySearchResult(SearchResult);
         UpdateVisibleSet();
       }
     }
@@ -202,6 +203,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer,
     set {
       if(SetValueProperty(ref _ignoreScope, value))
       {
+        ApplySearchResult(SearchResult);
         UpdateVisibleSet();
       }
     }
@@ -253,14 +255,8 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer,
 
   public void RecalculateMatches()
   {
+    // RunSearch will use BuildSearchResult to calculate the matches
     var rawResult = SearchFilter.RunSearch();
-
-    //// for now: make sure that the current entry is kept in the matches
-    //if(SelectedEntry != null)
-    //{
-    //  result.Add(SelectedEntry.NodeId);
-    //}
-
     SearchResult = rawResult;
   }
 
@@ -536,6 +532,14 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer,
     ChunkSet<EntryViewModel> hits,
     ChunkSet<EntryViewModel> blockers)
   {
+    // Bug Fix: ignoring scope would lead to unintuitive results,
+    // so we make sure to include the scope in the search hits.
+
+    if(!IgnoreScope)
+    {
+      hits *= Scope;
+    }
+
     var blocked = blockers.DescendentsSet();
     var support = hits.AncestorSet(false);
     var indirect = hits.DescendentsSet();
@@ -566,6 +570,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer,
   /// <summary>
   /// Set the search result (starting a chain of operations that changes
   /// <see cref="ChildList"/> and <see cref="VisibleSet"/> ultimately).
+  /// This set includes ALL search results, including out-of-scope entries.
   /// </summary>
   public ChunkMapping<SearchOutcome> SearchResult {
     get => _searchResult;
@@ -583,7 +588,7 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer,
   {
     var time0 = DateTime.UtcNow;
     result ??= BuildClearResult();
-    var useScope = !IgnoreScope;
+    // var useScope = !IgnoreScope;
     var matches = EntrySpace.CreateSet();
     foreach(var entryId in EntrySpace.AllIdsTopological(false))
     {
