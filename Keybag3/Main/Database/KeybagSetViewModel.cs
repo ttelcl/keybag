@@ -167,7 +167,7 @@ public class KeybagSetViewModel:
   /// Save pending changes if there were any.
   /// For use by the app when the user is closing the app.
   /// </summary>
-  public void Save()
+  public void SaveAtClose()
   {
     // This is NOT the normal save, but only used at app shutdown
     if(SavePending)

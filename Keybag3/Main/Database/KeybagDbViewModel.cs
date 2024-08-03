@@ -116,7 +116,7 @@ public class KeybagDbViewModel:
         case MessageBoxResult.Yes:
           foreach(var kbs in unsavedSets)
           {
-            kbs.Save();
+            kbs.SaveAtClose();
           }
           return true;
         case MessageBoxResult.No:
