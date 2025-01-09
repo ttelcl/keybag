@@ -117,28 +117,6 @@
         </DataTemplate>
     </UserControl.Resources>
     <DockPanel Background="{DynamicResource MahApps.Brushes.Control.Background}">
-        <!-- Bottom Buttons Pane -->
-        <Border
-            Padding="5,3"
-            BorderThickness="1"
-            BorderBrush="{DynamicResource MahApps.Brushes.Accent2}"
-            Background="{DynamicResource MahApps.Brushes.Accent4}"
-            DockPanel.Dock="Bottom">
-            <DockPanel>
-                <Button
-                    Padding="5,3" Margin="5,2" DockPanel.Dock="Right"
-                    Command="{Binding DoneCommand}"
-                    >
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="ArrowLeftBold" Padding="2,0" Height="24" Width="24" />
-                        <TextBlock FontSize="14" Padding="2,2" Text="Back"/>
-                    </StackPanel>
-                </Button>
-                <StackPanel>
-                    <!-- Empty space -->
-                </StackPanel>
-            </DockPanel>
-        </Border>
         <!-- Main Content -->
         <GroupBox>
             <GroupBox.Header>
@@ -237,6 +215,16 @@
                                 </TextBlock>
                             </StackPanel>
                         </DockPanel>
+                        <Button
+                            Padding="5,3" Margin="5,2" DockPanel.Dock="Right"
+                            Command="{Binding DoneCommand}"
+                            >
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial
+                                    Kind="CloseCircle" Padding="2,0" Height="24" Width="24" />
+                                <TextBlock FontSize="14" Padding="2,2" Text="Close"/>
+                            </StackPanel>
+                        </Button>
                         <StackPanel/>
                     </DockPanel>
                     <!-- List of Targets and add buttons -->
