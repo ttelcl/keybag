@@ -184,6 +184,17 @@
                     <DockPanel
                         DockPanel.Dock="Top" Margin="0,10,0,10">
                         <Button
+                            Padding="5,3" Margin="5,2" DockPanel.Dock="Left" Width="140"
+                            Command="{Binding DoneCommand}"
+                            >
+                            <!-- A second close button, only visible after synchronization -->
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial
+                                    Kind="CloseCircle" Padding="2,0" Height="24" Width="24" />
+                                <TextBlock FontSize="14" Padding="10,2" Text="Close"/>
+                            </StackPanel>
+                        </Button>
+                        <Button
                             DockPanel.Dock="Left"
                             Padding="5,3" Margin="5,0"
                             MinWidth="140"
@@ -215,16 +226,6 @@
                                 </TextBlock>
                             </StackPanel>
                         </DockPanel>
-                        <Button
-                            Padding="5,3" Margin="5,2" DockPanel.Dock="Right"
-                            Command="{Binding DoneCommand}"
-                            >
-                            <StackPanel Orientation="Horizontal">
-                                <iconPacks:PackIconMaterial
-                                    Kind="CloseCircle" Padding="2,0" Height="24" Width="24" />
-                                <TextBlock FontSize="14" Padding="2,2" Text="Close"/>
-                            </StackPanel>
-                        </Button>
                         <StackPanel/>
                     </DockPanel>
                     <!-- List of Targets and add buttons -->
