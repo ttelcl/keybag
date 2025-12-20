@@ -12,7 +12,14 @@
     mc:Ignorable="d" 
     d:DataContext="{d:DesignInstance db:KeybagSetViewModel, IsDesignTimeCreatable=False}"
     d:DesignHeight="450" d:DesignWidth="800">
+    <!--
+    This is the "normal" main content window, displaying
+    - The top button row
+    - The hiding screen overlay (currently right here, but to be moved to its own model)
+    - The UI for one keybag (KeybagView.xaml; KeybagViewModel.cs)
+    -->
     <DockPanel>
+        <!-- Row of buttons at top -->
         <Border
             DockPanel.Dock="Top"
             Padding="5,3"
