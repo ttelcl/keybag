@@ -175,7 +175,11 @@
             <local:KeybagView
                 DataContext="{Binding KeybagModel}"
                 />
-            <Grid 
+            <local:KeybagSetLockedView
+                Visibility="{Binding ShowingContent,
+                Converter={StaticResource VisibleIfString},
+                ConverterParameter=False}"/>
+            <!--<Grid 
                 Background="#8444"
                 Visibility="{Binding ShowingContent,
                     Converter={StaticResource VisibleIfString},
@@ -193,7 +197,7 @@
                             Stretch="Uniform"/>
                     </Grid.Background>
                 </Grid>
-            </Grid>
+            </Grid>-->
         </Grid>
 
     </DockPanel>
