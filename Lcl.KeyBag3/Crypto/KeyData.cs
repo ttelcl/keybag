@@ -3,6 +3,7 @@
  */
 
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -74,9 +75,18 @@ public class KeyData
   public void WriteTo(Stream stream)
   {
     Span<byte> bytes = stackalloc byte[80];
+    SerializeTo(bytes);
+    stream.Write(bytes);
+  }
+
+  /// <summary>
+  /// Serialize this <see cref="KeyData"/> to an 80 byte binary buffer
+  /// </summary>
+  /// <param name="bytes"></param>
+  public void SerializeTo(Span<byte> bytes)
+  {
     KeyId.TryWriteBytes(bytes[..16]);
     _salt.CopyTo(bytes[16..]);
-    stream.Write(bytes);
   }
 
   /// <summary>
@@ -89,6 +99,17 @@ public class KeyData
   /// The salt for key derivation
   /// </summary>
   public ReadOnlySpan<byte> Salt { get => _salt; }
+
+  /// <summary>
+  /// Serialize this <see cref="KeyData"/> to a base64 string
+  /// </summary>
+  /// <returns></returns>
+  public string ToBase64()
+  {
+    Span<byte> bytes = stackalloc byte[80];
+    SerializeTo(bytes);
+    return Base64Url.EncodeToString(bytes);
+  }
 
   /// <summary>
   /// Create a KeyData instance from its serialized byte sequence
@@ -110,6 +131,24 @@ public class KeyData
     var keyId = new Guid(bytes[..16]);
     var salt = bytes[16..];
     return new KeyData(keyId, salt);
+  }
+
+  /// <summary>
+  /// Create a <see cref="KeyData"/> from 80 bytes worth of its base64 encoded serialized binary form
+  /// </summary>
+  /// <param name="keydata64"></param>
+  /// <returns></returns>
+  /// <exception cref="InvalidOperationException"></exception>
+  public static KeyData FromBase64(string keydata64)
+  {
+    Span<byte> keydata = stackalloc byte[80];
+    var n = Base64Url.DecodeFromChars(keydata64, keydata);
+    if(n!=80)
+    {
+      throw new InvalidOperationException(
+        $"Expecting 80 bytes worth of base64 data");
+    }
+    return FromBytes(keydata);
   }
 
 }
