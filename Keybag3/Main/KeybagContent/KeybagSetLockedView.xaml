@@ -39,12 +39,12 @@
                 Orientation="Vertical"
                 Grid.Row="1"
                 Grid.Column="1"
-                Background="#88111111">
+                Background="#AA080808">
                 <Button
                     Command="{Binding ToggleContentCommand}"
                     Background="Transparent"
-                    Margin="20,20"
-                    Padding="5,3">
+                    Margin="10,10"
+                    Padding="15,5">
                     <StackPanel Orientation="Horizontal">
                         <iconPacks:PackIconMaterial
                             Kind="{Binding ShowIcon}" Padding="2,0"
