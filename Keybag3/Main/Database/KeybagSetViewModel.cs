@@ -67,6 +67,7 @@ public class KeybagSetViewModel:
         }
       },
       p => KeybagModel != null
+        && KeyKnownAndShowing
         && KeybagModel.Decoded
         && KeybagModel.HasUnsavedChunks);
     ShowSyncOverlayCommand = new DelegateCommand(
@@ -79,6 +80,7 @@ public class KeybagSetViewModel:
         }
       },
       p => KeybagModel!= null
+        && KeyKnownAndShowing
         && KeybagModel.Decoded
         && !KeybagModel.HasUnsavedChunks);
     DiscardCommand = new DelegateCommand(
@@ -204,6 +206,9 @@ public class KeybagSetViewModel:
 
   public ChunkId FileId { get => Model.FileId; }
 
+  /// <summary>
+  /// True if the key is known
+  /// </summary>
   public bool KeyKnown {
     get => _keyKnown;
     set {
@@ -212,11 +217,15 @@ public class KeybagSetViewModel:
         RaisePropertyChanged(nameof(LockStatus));
         RaisePropertyChanged(nameof(LockIcon));
         RaisePropertyChanged(nameof(KeyKnownAndShowing));
+        RaisePropertyChanged(nameof(ShowSaveDiscard));
       }
     }
   }
   private bool _keyKnown = false;
 
+  /// <summary>
+  /// Equivalent to <see cref="KeyKnown"/> AND <see cref="ShowingContent"/>.
+  /// </summary>
   public bool KeyKnownAndShowing {
     get => KeyKnown && ShowingContent;
   }
@@ -311,6 +320,9 @@ public class KeybagSetViewModel:
     return false;
   }
 
+  /// <summary>
+  /// True if content is showing. False in "hidden" mode
+  /// </summary>
   public bool ShowingContent {
     get => _showingContent;
     set {
@@ -393,10 +405,27 @@ public class KeybagSetViewModel:
     set {
       if(SetNullableInstanceProperty(ref _keybagModel, value))
       {
+        HasModelWithChanges = _keybagModel != null && _keybagModel.HasUnsavedChunks;
       }
     }
   }
   private KeybagViewModel? _keybagModel;
+
+  /// <summary>
+  /// Echoes <see cref="KeybagModel"/>.<see cref="KeybagViewModel.HasUnsavedChunks"/>
+  /// </summary>
+  public bool HasModelWithChanges {
+    get => _hasModelWithChanges;
+    internal set {
+      if(SetValueProperty(ref _hasModelWithChanges, value))
+      {
+        RaisePropertyChanged(nameof(ShowSaveDiscard));
+      }
+    }
+  }
+  private bool _hasModelWithChanges;
+
+  public bool ShowSaveDiscard => KeyKnown && HasModelWithChanges;
 
   public string ShowText {
     get => ShowingContent ? "Hide" : "Show";

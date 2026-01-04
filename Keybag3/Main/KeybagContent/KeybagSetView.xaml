@@ -56,6 +56,7 @@
                         <TextBlock FontSize="14" Padding="2,2" Text="Unlock"/>
                     </StackPanel>
                 </Button>
+                <!-- Show/Hide button -->
                 <Grid
                     ToolTipService.InitialShowDelay="100"
                     ToolTipService.BetweenShowDelay="0"
@@ -90,7 +91,7 @@
                         ToolTipService.InitialShowDelay="100"
                         ToolTipService.BetweenShowDelay="0"
                         ToolTip="Show the synchronization view for this keybag"
-                        Visibility="{Binding KeyKnownAndShowing,
+                        Visibility="{Binding KeyKnown,
                             Converter={StaticResource VisibleIfString},
                             ConverterParameter=True}"
                         ToolTipService.ShowOnDisabled="True">
@@ -106,7 +107,7 @@
                         ToolTipService.InitialShowDelay="100"
                         ToolTipService.BetweenShowDelay="0"
                         ToolTip="Save changes to this keybag"
-                        Visibility="{Binding KeyKnownAndShowing,
+                        Visibility="{Binding ShowSaveDiscard,
                             Converter={StaticResource VisibleIfString},
                             ConverterParameter=True}"
                         ToolTipService.ShowOnDisabled="True">
@@ -125,7 +126,7 @@
                         ToolTipService.InitialShowDelay="100"
                         ToolTipService.BetweenShowDelay="0"
                         ToolTip="Discard changes to this keybag"
-                        Visibility="{Binding KeyKnownAndShowing,
+                        Visibility="{Binding ShowSaveDiscard,
                             Converter={StaticResource VisibleIfString},
                             ConverterParameter=True}"
                         ToolTipService.ShowOnDisabled="True">
