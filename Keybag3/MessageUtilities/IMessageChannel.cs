@@ -11,25 +11,8 @@ namespace Keybag3.MessageUtilities;
 
 public interface IMessageChannelBase
 {
+  /// <summary>
+  /// The channel's name
+  /// </summary>
   string ChannelName { get; }
 }
-
-//public interface IMessageChannel<TSender>: IMessageChannelBase
-//{
-//  void Send(TSender sender);
-
-//  Subscription<TSender> Subscribe(Action<TSender> action);
-
-//  //event Action<TSender>? MessageReceived;
-//}
-
-//public interface IMessageChannel: IMessageChannel<object>
-//{
-//}
-
-//public interface IMessageChannel<TSender, TValue>: IMessageChannelBase
-//{
-//  void Send(TSender sender, TValue value);
-
-//  event Action<TSender, TValue>? MessageReceived;
-//}

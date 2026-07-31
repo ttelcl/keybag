@@ -28,13 +28,16 @@ public abstract class MessageSubscription
     SubscriptionId = Guid.NewGuid();
   }
 
+  /// <summary>
+  /// The generalized channel interface (implemented by <see cref="MessageChannel{TSender}"/>
+  /// or <see cref="MessageChannel{TSender, TValue}"/>)
+  /// </summary>
   public IMessageChannelBase ChannelBase { get; }
 
   /// <summary>
   /// A randomply created unique identifier for this registration
   /// </summary>
   public Guid SubscriptionId { get; }
-
 
   /// <summary>
   /// Explicitly unscribe the listener from the channel

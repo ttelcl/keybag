@@ -367,6 +367,11 @@ public class KeybagViewModel: ViewModelBase, IEntryContainer,
     private set {
       if(SetValueProperty(ref _hasUnsavedChunks, value))
       {
+        if(Owner.KeybagModel == this)
+        {
+          // Propagate to owner too
+          Owner.HasModelWithChanges = _hasUnsavedChunks;
+        }
       }
     }
   }
