@@ -18,7 +18,7 @@ namespace Keybag3.MessageUtilities;
 /// <typeparam name="TSender">
 /// The sender type
 /// </typeparam>
-public class Subscription<TSender>: MessageSubscription
+public sealed class Subscription<TSender>: MessageSubscription
 {
   /// <summary>
   /// Create a new Subscription
@@ -32,17 +32,30 @@ public class Subscription<TSender>: MessageSubscription
     Action = action;
   }
 
+  /// <summary>
+  /// The strongly typed channel this is a subscription to
+  /// </summary>
   public MessageChannel<TSender> Channel { get; }
 
+  /// <summary>
+  /// The callback invoked when a message is sent to the <see cref="Channel"/>
+  /// </summary>
   public Action<TSender> Action { get; }
 
+  /// <inheritdoc/>
   public override void Unsubscribe()
   {
     Channel.Unsubscribe(this);
   }
 }
 
-public class Subscription<TSender, TValue>: MessageSubscription
+/// <summary>
+/// Concrete implementation of <see cref="MessageSubscription"/> for channels
+/// that carry values in their messages.
+/// </summary>
+/// <typeparam name="TSender"></typeparam>
+/// <typeparam name="TValue"></typeparam>
+public sealed class Subscription<TSender, TValue>: MessageSubscription
 {
   internal Subscription(
     MessageChannel<TSender, TValue> channel,
@@ -53,10 +66,17 @@ public class Subscription<TSender, TValue>: MessageSubscription
     Action = action;
   }
 
+  /// <summary>
+  /// The strongly typed channel this is a subscription to
+  /// </summary>
   public MessageChannel<TSender, TValue> Channel { get; }
 
+  /// <summary>
+  /// The callback invoked when a message is sent to the <see cref="Channel"/>
+  /// </summary>
   public Action<TSender, TValue> Action { get; }
 
+  /// <inheritdoc/>
   public override void Unsubscribe()
   {
     Channel.Unsubscribe(this);

@@ -13,9 +13,9 @@ using Newtonsoft.Json.Linq;
 
 namespace Keybag3.MessageUtilities;
 
-public class MessageChannel<TSender, TValue>: IMessageChannelBase
+public sealed class MessageChannel<TSender, TValue>: IMessageChannelBase
 {
-  private Dictionary<Guid, WeakReference<Subscription<TSender, TValue>>>
+  private readonly Dictionary<Guid, WeakReference<Subscription<TSender, TValue>>>
     _subscriptions;
 
   internal MessageChannel(
@@ -25,9 +25,8 @@ public class MessageChannel<TSender, TValue>: IMessageChannelBase
     ChannelName = channelName;
   }
 
+  /// <inheritdoc/>
   public string ChannelName { get; }
-
-  // public event Action<TSender, TValue>? MessageReceived;
 
   /// <summary>
   /// Send the message to all subscribers.
@@ -103,7 +102,10 @@ public class MessageChannel<TSender, TValue>: IMessageChannelBase
     return subscription;
   }
 
-  public void Unsubscribe(
+  /// <summary>
+  /// Unsubscribe <paramref name="subscription"/> from this channel
+  /// </summary>
+  internal void Unsubscribe(
     Subscription<TSender, TValue> subscription)
   {
     // There is not much point in validating that the id matches
@@ -113,9 +115,9 @@ public class MessageChannel<TSender, TValue>: IMessageChannelBase
 
 }
 
-public class MessageChannel<TSender>: IMessageChannelBase
+public sealed class MessageChannel<TSender>: IMessageChannelBase
 {
-  private Dictionary<Guid, WeakReference<Subscription<TSender>>>
+  private readonly Dictionary<Guid, WeakReference<Subscription<TSender>>>
     _subscriptions;
 
   internal MessageChannel(
@@ -127,8 +129,6 @@ public class MessageChannel<TSender>: IMessageChannelBase
 
   /// <inheritdoc/>
   public string ChannelName { get; }
-
-  // public event Action<TSender>? MessageReceived;
 
   /// <summary>
   /// Send the message to all subscribers.
@@ -203,6 +203,9 @@ public class MessageChannel<TSender>: IMessageChannelBase
     return subscription;
   }
 
+  /// <summary>
+  /// Unsubscribe <paramref name="subscription"/> from this channel
+  /// </summary>
   internal void Unsubscribe(Subscription<TSender> subscription)
   {
     // There is not much point in validating that the id matches

@@ -16,9 +16,9 @@ namespace Keybag3.MessageUtilities;
 /// <summary>
 /// Owner object for loosely coupled message passing
 /// </summary>
-public class MessageHub
+public sealed class MessageHub
 {
-  private Dictionary<string, IMessageChannelBase> _channels;
+  private readonly Dictionary<string, IMessageChannelBase> _channels;
 
   /// <summary>
   /// Create a new MessageHub
@@ -28,6 +28,9 @@ public class MessageHub
     _channels = [];
   }
 
+  /// <summary>
+  /// If true, send operations log a message
+  /// </summary>
   public static bool VerboseSend { get; set; }
 
   /// <summary>

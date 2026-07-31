@@ -83,6 +83,5 @@ public static class MessageHubExtensions
     return hasMessageHub.MessageHub.Subscribe(channelName, action);
   }
 
-  //--
 }
 
